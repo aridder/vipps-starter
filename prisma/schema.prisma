@@ -1,0 +1,211 @@
+// Generic SaaS starter schema.
+//
+// Multi-tenant by default (Organization + Membership), but the org layer can be
+// hidden behind the `multiTenant` feature flag for simple single-tenant apps —
+// a default organization is always present so payments/subscriptions still have
+// something to attach to.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  // Pooled connection — used by the app at runtime
+  url      = env("DATABASE_URL")
+  // Direct (non-pooled) connection — used by migrations
+  directUrl = env("DATABASE_URL_UNPOOLED")
+}
+
+// ── Users, tenants, roles ─────────────────────────────────────────────────
+
+enum Role {
+  MEMBER
+  ADMIN
+  OWNER
+}
+
+model User {
+  id          String   @id @default(cuid())
+  vippsSub    String?  @unique // Vipps Login subject
+  email       String?  @unique
+  name        String
+  phone       String?
+  image       String?
+  roles       Role[]   @default([MEMBER]) // global roles (single-tenant fallback)
+  activeOrgId String? // which org the user is currently working in
+  createdAt   DateTime @default(now())
+
+  memberships   Membership[]
+  payments      Payment[]
+  agreements    Agreement[]
+  notifications Notification[]
+  pushSubs      PushSubscription[]
+}
+
+model Organization {
+  id   String @id @default(cuid())
+  name String
+  slug String @unique
+  // Vipps (partner model): each org bills to its own MSN. connectVipps
+  // registers a webhook per MSN and stores its id + signing secret.
+  vippsMsn           String?
+  vippsWebhookId     String?
+  vippsWebhookSecret String?
+  createdAt          DateTime @default(now())
+
+  memberships Membership[]
+  payments    Payment[]
+  agreements  Agreement[]
+}
+
+model Membership {
+  id        String   @id @default(cuid())
+  userId    String
+  orgId     String
+  roles     Role[]   @default([MEMBER])
+  createdAt DateTime @default(now())
+
+  user User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  org  Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, orgId])
+  @@index([orgId])
+}
+
+// ── Payments (Vipps ePayment) ─────────────────────────────────────────────
+
+enum PaymentPurpose {
+  ONE_TIME
+  SUBSCRIPTION
+  DONATION
+}
+
+enum PaymentStatus {
+  CREATED // awaiting user approval in Vipps
+  AUTHORIZED // approved, not captured yet
+  PAID // captured
+  CANCELLED // user aborted
+  FAILED
+  REFUNDED
+}
+
+model Payment {
+  id          String         @id @default(cuid())
+  orgId       String?
+  userId      String? // optional — one-off/donation can be paid without login
+  agreementId String? // set when this payment is a charge on a subscription
+  reference   String         @unique
+  purpose     PaymentPurpose
+  amountOre   Int
+  description String
+  status      PaymentStatus  @default(CREATED)
+  vippsState  String?
+  // Reserve/capture: when false, an authorized payment is held (RESERVED) for an
+  // admin to capture later instead of capturing automatically.
+  autoCapture Boolean        @default(true)
+  capturedOre Int            @default(0)
+  refundedOre Int            @default(0)
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  org       Organization? @relation(fields: [orgId], references: [id])
+  user      User?         @relation(fields: [userId], references: [id])
+  agreement Agreement?    @relation(fields: [agreementId], references: [id])
+
+  @@index([orgId])
+  @@index([userId])
+  @@index([agreementId])
+}
+
+// ── Subscriptions (Vipps Recurring) ───────────────────────────────────────
+
+enum AgreementInterval {
+  MONTH
+  YEAR
+}
+
+enum AgreementStatus {
+  PENDING // awaiting approval in the Vipps app
+  ACTIVE
+  STOPPED
+  EXPIRED
+}
+
+model Agreement {
+  id             String            @id @default(cuid())
+  orgId          String?
+  userId         String
+  purpose        PaymentPurpose
+  vippsId        String            @unique // agreementId at Vipps
+  status         AgreementStatus   @default(PENDING)
+  interval       AgreementInterval
+  amountOre      Int
+  description    String
+  nextChargeDate DateTime? // drives the daily charge cron
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+
+  org      Organization?     @relation(fields: [orgId], references: [id])
+  user     User              @relation(fields: [userId], references: [id])
+  charges  AgreementCharge[]
+  payments Payment[]
+
+  @@index([orgId])
+  @@index([userId])
+  @@index([status])
+}
+
+model AgreementCharge {
+  id          String   @id @default(cuid())
+  agreementId String
+  vippsId     String? // chargeId at Vipps
+  reference   String   @unique // idempotent per period
+  amountOre   Int
+  due         DateTime
+  status      String   @default("PENDING")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  agreement Agreement @relation(fields: [agreementId], references: [id], onDelete: Cascade)
+
+  @@index([agreementId])
+}
+
+// ── Notifications ─────────────────────────────────────────────────────────
+
+enum NotificationType {
+  GENERAL
+  PAYMENT
+  SYSTEM
+}
+
+model Notification {
+  id        String           @id @default(cuid())
+  userId    String
+  type      NotificationType @default(GENERAL)
+  title     String
+  body      String?
+  link      String?
+  read      Boolean          @default(false)
+  createdAt DateTime         @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, read])
+}
+
+// Web Push subscriptions (VAPID). Stored per user/device.
+model PushSubscription {
+  id        String   @id @default(cuid())
+  userId    String
+  endpoint  String   @unique
+  p256dh    String
+  auth      String
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+

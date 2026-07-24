@@ -1,0 +1,42 @@
+import { test, expect } from "@playwright/test";
+import { SHOTS_DIR, devLogin, ensureShotsDir } from "./helpers";
+
+// The first dev-login user becomes OWNER + ADMIN, so these admin pages render.
+test.beforeAll(() => ensureShotsDir());
+test.beforeEach(async ({ page }) => {
+  await devLogin(page);
+});
+
+test("billing page", async ({ page }) => {
+  await page.goto("/billing");
+  await expect(page.getByRole("heading", { name: "Billing" })).toBeVisible();
+  // Without Vipps keys the page shows the "activate" notice — still a good shot.
+  await page.screenshot({ path: `${SHOTS_DIR}/04-billing.png`, fullPage: true });
+});
+
+test("billing admin console", async ({ page }) => {
+  await page.goto("/billing/admin");
+  await expect(page.getByRole("heading", { name: "Billing" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "payments" })).toBeVisible();
+  await page.screenshot({
+    path: `${SHOTS_DIR}/07-billing-admin.png`,
+    fullPage: true,
+  });
+});
+
+test("settings page", async ({ page }) => {
+  await page.goto("/settings");
+  await expect(page.getByTestId("settings-page")).toBeVisible();
+  await expect(page.getByText("Organization")).toBeVisible();
+  await page.screenshot({
+    path: `${SHOTS_DIR}/05-settings.png`,
+    fullPage: true,
+  });
+});
+
+test("profile page with sign out", async ({ page }) => {
+  await page.goto("/profile");
+  await expect(page.getByRole("heading", { name: "Profile" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Sign out" })).toBeVisible();
+  await page.screenshot({ path: `${SHOTS_DIR}/06-profile.png`, fullPage: true });
+});

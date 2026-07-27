@@ -1,22 +1,36 @@
-// Branding & marketing config — all client-safe (NEXT_PUBLIC_*). Set these in
-// your hosting env; the defaults below are placeholders. This is the one place
-// to rebrand the public landing page and the "hire me" section.
+// Branding & marketing config — resolved at RUNTIME on the server, so your
+// hosting platform can set/override these as plain app settings (environment
+// variables) without rebuilding the image. Exposed to the client via the
+// `meta.site` tRPC query. The defaults below are the maintainer's values.
 
-export const site = {
-  name: process.env.NEXT_PUBLIC_APP_NAME ?? "Vipps Starter",
-  tagline:
-    process.env.NEXT_PUBLIC_TAGLINE ??
-    "Production-ready Vipps payments for Next.js — clone it and ship.",
-  githubUrl:
-    process.env.NEXT_PUBLIC_GITHUB_URL ??
-    "https://github.com/your-org/vipps-starter",
-  // The person/company behind this — advertised on the landing page.
-  author: {
-    name: process.env.NEXT_PUBLIC_AUTHOR_NAME ?? "Your Name",
-    tagline:
-      process.env.NEXT_PUBLIC_AUTHOR_TAGLINE ??
-      "Freelance developer — Vipps, payments and Next.js integrations.",
-    url: process.env.NEXT_PUBLIC_AUTHOR_URL ?? "https://your-site.example",
-    email: process.env.NEXT_PUBLIC_CONTACT_EMAIL ?? "you@example.com",
-  },
+export type SiteConfig = {
+  name: string;
+  tagline: string;
+  githubUrl: string;
+  author: { name: string; tagline: string; url: string; email: string };
 };
+
+const env = (key: string, fallback: string) => {
+  const v = process.env[key];
+  return v && v.trim() !== "" ? v : fallback;
+};
+
+export function resolveSite(): SiteConfig {
+  return {
+    name: env("APP_NAME", "Vipps Starter"),
+    tagline: env(
+      "SITE_TAGLINE",
+      "Starter for folk og AI-agenter som vil ta i bruk Vipps — Login, betalinger og faste trekk (abonnement). Test live med ekte Vipps, og klon fra GitHub.",
+    ),
+    githubUrl: env("GITHUB_URL", "https://github.com/aridder/vipps-starter"),
+    author: {
+      name: env("AUTHOR_NAME", "Asbjørn Riddervold"),
+      tagline: env(
+        "AUTHOR_TAGLINE",
+        "Utvikler med sans for artige idéer og enkle løsninger. Til daglig i Kantega, ellers stadig på jakt etter nye idéer å utforske.",
+      ),
+      url: env("AUTHOR_URL", "https://www.linkedin.com/in/ariddervold/"),
+      email: env("CONTACT_EMAIL", "aridder@pm.me"),
+    },
+  };
+}

@@ -59,7 +59,7 @@ const no: Dict = {
 
   "about.builtBy": "Laget av",
   "about.services": "Se tjenestene mine →",
-  "about.hire": "Lei meg",
+  "about.hire": "Ta kontakt",
 
   "license.title": "Lisens & fri bruk",
   "license.body":

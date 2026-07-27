@@ -55,7 +55,7 @@ const no: Dict = {
   "donate.signInRecurring": "Logg inn med Vipps for å sette opp fast støtte",
   "donate.opening": "Åpner Vipps …",
   "donate.donate": "Doner {amount} kr med Vipps",
-  "donate.support": "Støtt {amount} kr / {per} med Vipps",
+  "donate.support": "Støtt {amount} kr {per} med Vipps",
 
   "about.builtBy": "Laget av",
   "about.services": "Se tjenestene mine →",
@@ -234,7 +234,7 @@ const en: Dict = {
   "donate.signInRecurring": "Sign in with Vipps to set up recurring support",
   "donate.opening": "Opening Vipps …",
   "donate.donate": "Donate {amount} kr with Vipps",
-  "donate.support": "Support {amount} kr / {per} with Vipps",
+  "donate.support": "Support {amount} kr {per} with Vipps",
 
   "about.builtBy": "Built by",
   "about.services": "See my services →",

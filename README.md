@@ -29,7 +29,7 @@ Full details: [`docs/VIPPS.md`](docs/VIPPS.md).
 ## Quick start
 
 ```bash
-cp .env.example .env         # set DATABASE_URL, AUTH_SECRET, and NEXT_PUBLIC_* branding
+cp .env.example .env         # set DATABASE_URL, AUTH_SECRET, and runtime branding
 npm install
 npm run db:up                # local Postgres (docker)
 npm run db:reset             # migrate + seed
@@ -42,9 +42,10 @@ landing page takes real (test) Vipps payments.
 
 ## Rebranding (make it yours)
 
-Everything on the landing page is driven by `NEXT_PUBLIC_*` env vars (see
-`src/lib/site.ts`): app name, tagline, GitHub URL, and the **Built by** section
-(your name, services URL, contact email). No code changes needed to rebrand.
+Everything on the landing page is driven by runtime env vars (see
+`src/lib/site.ts`): `APP_NAME`, `SITE_TAGLINE`, `GITHUB_URL`, `AUTHOR_NAME`,
+`AUTHOR_TAGLINE`, `AUTHOR_URL`, and `CONTACT_EMAIL`. No code changes or rebuild
+are needed to rebrand.
 
 ## License
 

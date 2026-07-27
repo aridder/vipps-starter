@@ -3,12 +3,10 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { api } from "@/trpc/react";
-import {
-  AGREEMENT_INTERVAL_SUFFIX,
-  AGREEMENT_STATUS_LABELS,
-} from "@/lib/labels";
+import { useI18n } from "@/components/I18nProvider";
 
 export default function SubscriptionReceiptPage() {
+  const { t } = useI18n();
   const [id, setId] = useState<string | null>(null);
 
   useEffect(() => {
@@ -34,26 +32,27 @@ export default function SubscriptionReceiptPage() {
       {waiting && !status.isError ? (
         <>
           <div className="text-5xl">⏳</div>
-          <h1 className="text-xl font-bold">Awaiting approval…</h1>
-          <p className="text-sm text-stone-500">
-            Approve the subscription in the Vipps app.
-          </p>
+          <h1 className="text-xl font-bold">{t("subreceipt.awaiting")}</h1>
+          <p className="text-sm text-stone-500">{t("subreceipt.approve")}</p>
         </>
       ) : active ? (
         <>
           <div className="text-5xl">🎉</div>
-          <h1 className="text-xl font-bold">Subscription active!</h1>
+          <h1 className="text-xl font-bold">{t("subreceipt.active")}</h1>
           <p className="text-sm text-stone-600">
-            {a.description} — {a.amountOre / 100} kr{" "}
-            {AGREEMENT_INTERVAL_SUFFIX[a.interval]}.
+            {t("subreceipt.activeLine", {
+              desc: a.description,
+              amount: a.amountOre / 100,
+              per: a.interval === "YEAR" ? t("per.yr") : t("per.mo"),
+            })}
           </p>
         </>
       ) : (
         <>
           <div className="text-5xl">😕</div>
-          <h1 className="text-xl font-bold">Subscription not created</h1>
+          <h1 className="text-xl font-bold">{t("subreceipt.notCreated")}</h1>
           <p className="text-sm text-stone-600">
-            {a ? AGREEMENT_STATUS_LABELS[a.status] : "Not found."}
+            {a ? t(`astatus.${a.status.toLowerCase()}`) : t("subreceipt.notFound")}
           </p>
         </>
       )}
@@ -64,11 +63,11 @@ export default function SubscriptionReceiptPage() {
             href="/billing"
             className="rounded-xl bg-indigo-600 px-6 py-2.5 text-sm font-semibold text-white"
           >
-            Try again
+            {t("receipt.tryAgain")}
           </Link>
         )}
         <Link href="/" className="text-sm font-medium text-indigo-600">
-          Back to app →
+          {t("receipt.back")}
         </Link>
       </div>
     </div>

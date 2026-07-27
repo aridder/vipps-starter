@@ -4,27 +4,29 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { api } from "@/trpc/react";
 import { Logo } from "@/components/Logo";
-
-const APP_NAME = process.env.NEXT_PUBLIC_APP_NAME ?? "App Starter";
+import { useI18n } from "@/components/I18nProvider";
+import { LocaleSwitcher } from "@/components/LocaleSwitcher";
 
 export function Nav({ userName }: { userName?: string | null }) {
   const pathname = usePathname();
+  const { t } = useI18n();
+  const site = api.meta.site.useQuery();
   const features = api.meta.features.useQuery();
   const me = api.meta.me.useQuery(undefined, { retry: false });
 
   const links: { href: string; label: string; show: boolean }[] = [
-    { href: "/", label: "Home", show: true },
+    { href: "/", label: t("nav.home"), show: true },
     {
       href: "/billing",
-      label: "Billing",
+      label: t("nav.billing"),
       show: features.data?.payments ?? false,
     },
     {
       href: "/billing/admin",
-      label: "Admin",
+      label: t("nav.admin"),
       show: (features.data?.paymentAdmin ?? false) && !!me.data?.isAdmin,
     },
-    { href: "/settings", label: "Settings", show: !!me.data?.isAdmin },
+    { href: "/settings", label: t("nav.settings"), show: !!me.data?.isAdmin },
   ];
 
   return (
@@ -33,7 +35,9 @@ export function Nav({ userName }: { userName?: string | null }) {
         <nav className="flex items-center gap-1">
           <Link href="/" className="mr-3 flex items-center gap-2 font-bold">
             <Logo size={24} />
-            <span className="hidden sm:inline">{APP_NAME}</span>
+            <span className="hidden sm:inline">
+              {site.data?.name ?? "Vipps Starter"}
+            </span>
           </Link>
           {links
             .filter((l) => l.show)
@@ -55,18 +59,21 @@ export function Nav({ userName }: { userName?: string | null }) {
               );
             })}
         </nav>
-        {userName ? (
-          <Link href="/profile" className="text-sm text-stone-600">
-            {userName}
-          </Link>
-        ) : (
-          <Link
-            href="/login"
-            className="rounded-full bg-indigo-600 px-4 py-1.5 text-sm font-semibold text-white"
-          >
-            Sign in
-          </Link>
-        )}
+        <div className="flex items-center gap-3">
+          <LocaleSwitcher />
+          {userName ? (
+            <Link href="/profile" className="text-sm text-stone-600">
+              {userName}
+            </Link>
+          ) : (
+            <Link
+              href="/login"
+              className="rounded-full bg-indigo-600 px-4 py-1.5 text-sm font-semibold text-white"
+            >
+              {t("nav.signIn")}
+            </Link>
+          )}
+        </div>
       </div>
     </header>
   );

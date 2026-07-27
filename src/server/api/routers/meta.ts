@@ -5,9 +5,13 @@ import {
 } from "@/server/api/trpc";
 import { Role } from "@prisma/client";
 import { resolveFeatures } from "@/lib/features";
+import { resolveSite } from "@/lib/site";
 import { vippsConfigured } from "@/server/vipps";
 
 export const metaRouter = createTRPCRouter({
+  // Branding/marketing config, resolved at runtime from env (see src/lib/site.ts)
+  site: publicProcedure.query(() => resolveSite()),
+
   // Feature flags + capability info for the client
   features: publicProcedure.query(() => {
     const features = resolveFeatures();

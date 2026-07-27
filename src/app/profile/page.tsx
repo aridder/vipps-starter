@@ -3,8 +3,10 @@
 import { signOut } from "next-auth/react";
 import { api } from "@/trpc/react";
 import { formatDate } from "@/lib/labels";
+import { useI18n } from "@/components/I18nProvider";
 
 export default function ProfilePage() {
+  const { t } = useI18n();
   const me = api.meta.me.useQuery(undefined, { retry: false });
   const utils = api.useUtils();
   const notifications = api.notification.list.useQuery(undefined, {
@@ -15,12 +17,12 @@ export default function ProfilePage() {
   });
 
   if (me.isError || !me.data?.id) {
-    return <p className="text-sm text-stone-500">Sign in to view your profile.</p>;
+    return <p className="text-sm text-stone-500">{t("profile.signInToView")}</p>;
   }
 
   return (
     <div className="space-y-5">
-      <h1 className="text-xl font-bold">Profile</h1>
+      <h1 className="text-xl font-bold">{t("profile.title")}</h1>
 
       <div className="rounded-2xl bg-white p-4 shadow-sm">
         <div className="font-semibold">{me.data.name}</div>
@@ -41,12 +43,14 @@ export default function ProfilePage() {
 
       <div className="space-y-2">
         <div className="flex items-center justify-between">
-          <h2 className="text-sm font-semibold text-stone-600">Notifications</h2>
+          <h2 className="text-sm font-semibold text-stone-600">
+            {t("profile.notifications")}
+          </h2>
           <button
             onClick={() => markAllRead.mutate()}
             className="text-xs text-indigo-600"
           >
-            Mark all read
+            {t("profile.markAllRead")}
           </button>
         </div>
         {notifications.data?.map((n) => (
@@ -65,7 +69,7 @@ export default function ProfilePage() {
         ))}
         {notifications.isSuccess && notifications.data.length === 0 && (
           <div className="rounded-2xl bg-white p-4 text-sm text-stone-500 shadow-sm">
-            No notifications.
+            {t("profile.none")}
           </div>
         )}
       </div>
@@ -74,7 +78,7 @@ export default function ProfilePage() {
         onClick={() => signOut({ callbackUrl: "/" })}
         className="rounded-xl bg-stone-100 px-4 py-2 text-sm font-semibold text-stone-600"
       >
-        Sign out
+        {t("profile.signOut")}
       </button>
     </div>
   );

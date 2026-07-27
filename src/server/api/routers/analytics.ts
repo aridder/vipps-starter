@@ -47,15 +47,15 @@ function isRateLimited(headers: Headers) {
     sourceEventCounts.clear();
   }
 
-  instanceEventCount += 1;
-  if (instanceEventCount > maxEventsPerInstancePerMinute) return true;
-
   const source =
     headers.get("x-forwarded-for")?.split(",")[0]?.trim().slice(0, 64) ??
     "unknown";
   const count = (sourceEventCounts.get(source) ?? 0) + 1;
   sourceEventCounts.set(source, count);
-  return count > maxEventsPerSourcePerMinute;
+  if (count > maxEventsPerSourcePerMinute) return true;
+
+  instanceEventCount += 1;
+  return instanceEventCount > maxEventsPerInstancePerMinute;
 }
 
 export const analyticsRouter = createTRPCRouter({

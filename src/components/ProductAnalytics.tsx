@@ -20,6 +20,10 @@ let fallbackSessionStarted = false;
 let eventSink:
   | ((name: string, properties: EventProperties) => void)
   | undefined;
+const pendingEvents: Array<{
+  name: string;
+  properties: EventProperties;
+}> = [];
 
 function createId() {
   try {
@@ -96,12 +100,36 @@ function deviceType() {
   return "desktop";
 }
 
+const acquisitionValues = new Set([
+  "direct",
+  "google",
+  "facebook",
+  "instagram",
+  "linkedin",
+  "newsletter",
+  "organic",
+  "cpc",
+  "paid_social",
+  "email",
+  "referral",
+]);
+
+function acquisitionDimension(value: string | null, fallback: string) {
+  if (!value) return fallback;
+  const normalized = value.trim().toLowerCase();
+  return acquisitionValues.has(normalized) ? normalized : "other";
+}
+
 export function trackClientEvent(
   name: string,
   properties: EventProperties = {},
 ) {
   try {
-    eventSink?.(name, properties);
+    if (eventSink) {
+      eventSink(name, properties);
+    } else if (pendingEvents.length < 50) {
+      pendingEvents.push({ name, properties });
+    }
   } catch {
     // Telemetry must never alter product behavior.
   }
@@ -178,7 +206,10 @@ export function ProductAnalytics() {
   const mutate = track.mutate;
 
   useEffect(() => {
-    if (!enabled.data?.enabled) return;
+    if (!enabled.data?.enabled) {
+      if (enabled.data?.enabled === false) pendingEvents.length = 0;
+      return;
+    }
 
     const sink = (name: string, properties: EventProperties) => {
       const definedProperties = Object.fromEntries(
@@ -199,6 +230,9 @@ export function ProductAnalytics() {
       });
     };
     eventSink = sink;
+    for (const event of pendingEvents.splice(0)) {
+      sink(event.name, event.properties);
+    }
     return () => {
       if (eventSink === sink) eventSink = undefined;
     };
@@ -227,19 +261,24 @@ export function ProductAnalytics() {
 
     if (!hasStartedSession()) {
       const query = new URLSearchParams(window.location.search);
-      let referrerHost = "direct";
+      let referrerType = "direct";
       try {
-        if (document.referrer) referrerHost = new URL(document.referrer).host;
+        if (document.referrer) {
+          referrerType =
+            new URL(document.referrer).origin === window.location.origin
+              ? "internal"
+              : "external";
+        }
       } catch {
-        referrerHost = "unknown";
+        referrerType = "unknown";
       }
 
       trackClientEvent("app.session_started", {
         path,
-        source: query.get("utm_source")?.slice(0, 100) ?? "direct",
-        medium: query.get("utm_medium")?.slice(0, 100) ?? "none",
-        campaign: query.get("utm_campaign")?.slice(0, 100) ?? "none",
-        referrerHost: referrerHost.slice(0, 100),
+        source: acquisitionDimension(query.get("utm_source"), "direct"),
+        medium: acquisitionDimension(query.get("utm_medium"), "none"),
+        campaign: query.has("utm_campaign") ? "tagged" : "none",
+        referrerType,
         deviceType: deviceType(),
       });
     }
@@ -251,36 +290,36 @@ export function ProductAnalytics() {
     if (!enabled.data?.enabled) return;
 
     const onClick = (event: MouseEvent) => {
-        const target = event.target as Element | null;
-        const tagged = target?.closest<HTMLElement>("[data-analytics-event]");
-        const taggedEvent = tagged?.dataset.analyticsEvent;
-        if (
-          taggedEvent &&
-          /^[a-z][a-z0-9_]*(?:\.[a-z][a-z0-9_]*)+$/.test(taggedEvent)
-        ) {
-          trackClientEvent(taggedEvent, {
-            label: tagged.dataset.analyticsLabel?.slice(0, 100),
-            path: sanitizePath(window.location.pathname),
-          });
-        }
+      const target = event.target as Element | null;
+      const tagged = target?.closest<HTMLElement>("[data-analytics-event]");
+      const taggedEvent = tagged?.dataset.analyticsEvent;
+      if (
+        taggedEvent &&
+        /^[a-z][a-z0-9_]*(?:\.[a-z][a-z0-9_]*)+$/.test(taggedEvent)
+      ) {
+        trackClientEvent(taggedEvent, {
+          label: tagged.dataset.analyticsLabel?.slice(0, 100),
+          path: sanitizePath(window.location.pathname),
+        });
+      }
 
-        const anchor = target?.closest("a");
-        const href = anchor?.getAttribute("href");
-        if (!href || href.startsWith("#")) return;
+      const anchor = target?.closest("a");
+      const href = anchor?.getAttribute("href");
+      if (!href || href.startsWith("#")) return;
 
-        try {
-          const destination = new URL(href, window.location.href);
-          const internal = destination.origin === window.location.origin;
-          trackClientEvent("app.navigation_clicked", {
-            fromPath: sanitizePath(window.location.pathname),
-            destinationType: internal ? "internal" : "outbound",
-            destinationPath: internal
-              ? sanitizePath(destination.pathname)
-              : destination.host.slice(0, 100),
+      try {
+        const destination = new URL(href, window.location.href);
+        const internal = destination.origin === window.location.origin;
+        trackClientEvent("app.navigation_clicked", {
+          fromPath: sanitizePath(window.location.pathname),
+          destinationType: internal ? "internal" : "outbound",
+          destinationPath: internal
+            ? sanitizePath(destination.pathname)
+            : destination.host.slice(0, 100),
           });
-        } catch {
-          return;
-        }
+      } catch {
+        return;
+      }
     };
 
     const onError = (event: ErrorEvent) => {

@@ -29,8 +29,8 @@ export default async function RootLayout({
   return (
     <html lang="en">
       <body className="min-h-dvh bg-stone-100 font-sans text-stone-900 antialiased">
-        <ProductAnalytics />
         <TRPCReactProvider>
+          <ProductAnalytics />
           <Nav userName={session?.user?.name} />
           <main className="mx-auto max-w-2xl px-4 py-8">{children}</main>
         </TRPCReactProvider>

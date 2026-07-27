@@ -13,6 +13,7 @@ const blockedTerms = new Set([
   "access_token",
   "refresh_token",
   "auth_token",
+  "token",
   "secret",
   "cookie",
   "authorization",
@@ -38,6 +39,7 @@ function blockedKey(key: string) {
     (term) =>
       normalized === term ||
       normalized.startsWith(`${term}_`) ||
+      normalized.includes(`_${term}_`) ||
       normalized.endsWith(`_${term}`),
   );
 }
@@ -81,7 +83,12 @@ export function trackProductEvent(
     kind: "product_event",
     serviceName,
     environment: process.env.AZURE_ENVIRONMENT ?? "local",
-    serviceVersion: process.env.APP_VERSION ?? "development",
+    serviceVersion:
+      process.env.APP_VERSION ??
+      process.env.NEXT_PUBLIC_COMMIT_SHA ??
+      process.env.NEXT_PUBLIC_APP_VERSION ??
+      process.env.npm_package_version ??
+      "development",
     timestamp: new Date().toISOString(),
     eventName: eventName.slice(0, 128),
     ...context,

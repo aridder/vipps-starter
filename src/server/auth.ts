@@ -82,7 +82,9 @@ if (process.env.VIPPS_CLIENT_ID && process.env.VIPPS_CLIENT_SECRET) {
       "https://api.vipps.no/access-management-1.0/access/",
     clientId: process.env.VIPPS_CLIENT_ID,
     clientSecret: process.env.VIPPS_CLIENT_SECRET,
-    client: { token_endpoint_auth_method: "client_secret_post" },
+    // Vipps merchant Login clients use client_secret_basic by default.
+    // client_secret_post only works after explicitly enabling it in the portal.
+    client: { token_endpoint_auth_method: "client_secret_basic" },
     checks: ["pkce", "state"],
     authorization: { params: { scope: "openid name email phoneNumber" } },
     profile(profile) {

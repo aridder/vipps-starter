@@ -2,10 +2,12 @@
 
 import { useEffect, useState } from "react";
 import { getProviders, signIn } from "next-auth/react";
+import { useI18n } from "@/components/I18nProvider";
 
 type Providers = Awaited<ReturnType<typeof getProviders>>;
 
 export default function LoginPage() {
+  const { t } = useI18n();
   const [providers, setProviders] = useState<Providers>(null);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -19,7 +21,7 @@ export default function LoginPage() {
 
   return (
     <div className="mx-auto max-w-sm space-y-6 py-8">
-      <h1 className="text-center text-2xl font-bold">Sign in</h1>
+      <h1 className="text-center text-2xl font-bold">{t("login.title")}</h1>
 
       {hasVipps && (
         <button
@@ -28,14 +30,14 @@ export default function LoginPage() {
           onClick={() => signIn("vipps", { callbackUrl: "/" })}
           className="w-full rounded-xl bg-[#ff5b24] py-3 font-semibold text-white"
         >
-          Continue with Vipps
+          {t("login.continueVipps")}
         </button>
       )}
 
       {hasVipps && hasDev && (
         <div className="flex items-center gap-3 text-xs text-stone-400">
           <div className="h-px flex-1 bg-stone-200" />
-          or
+          {t("login.or")}
           <div className="h-px flex-1 bg-stone-200" />
         </div>
       )}
@@ -48,40 +50,40 @@ export default function LoginPage() {
             void signIn("dev", { name, email, callbackUrl: "/" });
           }}
         >
-          <p className="text-sm text-stone-500">
-            Dev login (no password) — for local development and testing.
-          </p>
+          <p className="text-sm text-stone-500">{t("login.devNote")}</p>
           <input
+            name="name"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            placeholder="Name"
+            placeholder={t("login.name")}
             required
             className="w-full rounded-xl border border-stone-200 px-3 py-2.5 outline-none focus:border-indigo-500"
           />
           <input
+            name="email"
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            placeholder="Email"
+            placeholder={t("login.email")}
             required
             className="w-full rounded-xl border border-stone-200 px-3 py-2.5 outline-none focus:border-indigo-500"
           />
           <button
+            data-testid="dev-login-submit"
             type="submit"
             data-analytics-event="auth.login_started"
             data-analytics-label="dev"
             disabled={!name || !email}
             className="w-full rounded-xl bg-indigo-600 py-2.5 font-semibold text-white disabled:opacity-50"
           >
-            Sign in
+            {t("login.signIn")}
           </button>
         </form>
       )}
 
       {!hasVipps && !hasDev && (
         <p className="text-center text-sm text-stone-500">
-          No login providers configured. Set ENABLE_DEV_LOGIN=true or add Vipps
-          keys.
+          {t("login.noProviders")}
         </p>
       )}
     </div>

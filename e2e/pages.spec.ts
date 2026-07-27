@@ -36,7 +36,11 @@ test("settings page", async ({ page }) => {
 
 test("profile page with sign out", async ({ page }) => {
   await page.goto("/profile");
-  await expect(page.getByRole("heading", { name: "Profile" })).toBeVisible();
-  await expect(page.getByRole("button", { name: "Sign out" })).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: /^(Profile|Profil)$/ }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: /^(Sign out|Logg ut)$/ }),
+  ).toBeVisible();
   await page.screenshot({ path: `${SHOTS_DIR}/06-profile.png`, fullPage: true });
 });

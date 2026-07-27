@@ -3,9 +3,10 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { api } from "@/trpc/react";
-import { PAYMENT_STATUS_LABELS } from "@/lib/labels";
+import { useI18n } from "@/components/I18nProvider";
 
 export default function ReceiptPage() {
+  const { t } = useI18n();
   const [ref, setRef] = useState<string | null>(null);
 
   useEffect(() => {
@@ -33,23 +34,26 @@ export default function ReceiptPage() {
       {waiting && !status.isError ? (
         <>
           <div className="text-5xl">⏳</div>
-          <h1 className="text-xl font-bold">Checking payment…</h1>
-          <p className="text-sm text-stone-500">Confirming with Vipps.</p>
+          <h1 className="text-xl font-bold">{t("receipt.checking")}</h1>
+          <p className="text-sm text-stone-500">{t("receipt.confirming")}</p>
         </>
       ) : done ? (
         <>
           <div className="text-5xl">✅</div>
-          <h1 className="text-xl font-bold">Thanks!</h1>
+          <h1 className="text-xl font-bold">{t("receipt.thanks")}</h1>
           <p className="text-sm text-stone-600">
-            {p.description} — {p.amountOre / 100} kr.
+            {t("receipt.paidLine", {
+              desc: p.description,
+              amount: p.amountOre / 100,
+            })}
           </p>
         </>
       ) : (
         <>
           <div className="text-5xl">😕</div>
-          <h1 className="text-xl font-bold">Payment not completed</h1>
+          <h1 className="text-xl font-bold">{t("receipt.notCompleted")}</h1>
           <p className="text-sm text-stone-600">
-            {p ? PAYMENT_STATUS_LABELS[p.status] : "Payment not found."}
+            {p ? t(`status.${p.status.toLowerCase()}`) : t("receipt.notFound")}
           </p>
         </>
       )}
@@ -60,11 +64,11 @@ export default function ReceiptPage() {
             href="/billing"
             className="rounded-xl bg-indigo-600 px-6 py-2.5 text-sm font-semibold text-white"
           >
-            Try again
+            {t("receipt.tryAgain")}
           </Link>
         )}
         <Link href="/" className="text-sm font-medium text-indigo-600">
-          Back to app →
+          {t("receipt.back")}
         </Link>
       </div>
     </div>

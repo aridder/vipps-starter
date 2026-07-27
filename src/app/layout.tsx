@@ -1,18 +1,20 @@
 import type { Metadata, Viewport } from "next";
+import { cookies } from "next/headers";
 import "./globals.css";
 import { TRPCReactProvider } from "@/trpc/react";
 import { ProductAnalytics } from "@/components/ProductAnalytics";
+import { I18nProvider } from "@/components/I18nProvider";
 import { Nav } from "@/components/Nav";
 import { auth } from "@/server/auth";
+import { resolveSite } from "@/lib/site";
+import { resolveLocale } from "@/lib/i18n";
 
 export const dynamic = "force-dynamic";
 
-const APP_NAME = process.env.NEXT_PUBLIC_APP_NAME ?? "App Starter";
-
-export const metadata: Metadata = {
-  title: APP_NAME,
-  description: "Next.js + tRPC + Prisma + Vipps starter template.",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const site = resolveSite();
+  return { title: site.name, description: site.tagline };
+}
 
 export const viewport: Viewport = {
   width: "device-width",
@@ -26,13 +28,18 @@ export default async function RootLayout({
   children: React.ReactNode;
 }) {
   const session = await auth();
+  const cookieStore = await cookies();
+  const locale = resolveLocale(cookieStore.get("NEXT_LOCALE")?.value);
+
   return (
-    <html lang="en">
+    <html lang={locale}>
       <body className="min-h-dvh bg-stone-100 font-sans text-stone-900 antialiased">
         <TRPCReactProvider>
-          <ProductAnalytics />
-          <Nav userName={session?.user?.name} />
-          <main className="mx-auto max-w-2xl px-4 py-8">{children}</main>
+          <I18nProvider locale={locale}>
+            <ProductAnalytics />
+            <Nav userName={session?.user?.name} />
+            <main className="mx-auto max-w-2xl px-4 py-8">{children}</main>
+          </I18nProvider>
         </TRPCReactProvider>
       </body>
     </html>

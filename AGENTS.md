@@ -88,7 +88,9 @@ One `0_init` migration.
   link in `src/components/Nav.tsx` (gate by flag/role via `l.show`).
 - **A new model:** edit `schema.prisma`, then create a migration and
   `npx prisma generate`. Keep relations optional where a tenant may be absent.
-- **Rebranding the landing page:** edit `NEXT_PUBLIC_*` env (see `src/lib/site.ts`).
+- **Rebranding the landing page:** edit the runtime branding env vars
+  (`APP_NAME`, `SITE_TAGLINE`, `GITHUB_URL`, `AUTHOR_*`, `CONTACT_EMAIL`; see
+  `src/lib/site.ts`).
 
 ## Guardrails (don't)
 

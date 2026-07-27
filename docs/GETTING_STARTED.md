@@ -24,7 +24,7 @@ cp .env.example .env
 Minimum to boot:
 
 ```
-NEXT_PUBLIC_APP_NAME="Your App"
+APP_NAME="Your App"
 DATABASE_URL=...              # pooled
 DATABASE_URL_UNPOOLED=...     # direct (for migrations)
 AUTH_SECRET=...               # openssl rand -base64 32
@@ -78,8 +78,10 @@ env vars, then flip `FEATURE_EMAIL` / `_SMS` / `_PUSH`.
 
 ## 8. Make it yours
 
-- Set the `NEXT_PUBLIC_*` branding env (see `src/lib/site.ts`) and replace
-  `src/components/Logo.tsx`, `src/app/icon.svg`, `apple-icon.png`.
+- Set `APP_NAME`, `SITE_TAGLINE`, `GITHUB_URL`, `AUTHOR_NAME`,
+  `AUTHOR_TAGLINE`, `AUTHOR_URL`, and `CONTACT_EMAIL` (see
+  `src/lib/site.ts`), then replace `src/components/Logo.tsx`,
+  `src/app/icon.svg`, and `apple-icon.png`.
 - Build your domain as tRPC routers + pages (see recipes in
   [`../AGENTS.md`](../AGENTS.md)).
 
@@ -87,9 +89,9 @@ env vars, then flip `FEATURE_EMAIL` / `_SMS` / `_PUSH`.
 
 1. Import the repo in Vercel.
 2. Add a Postgres integration (e.g. Neon) — it sets `DATABASE_URL(_UNPOOLED)`.
-3. Set env vars: `AUTH_SECRET`, `NEXT_PUBLIC_APP_NAME`, Vipps keys (if used),
-   `CRON_SECRET` (for the subscription cron), notification keys, and
-   `ENABLE_DEV_LOGIN=false` for production.
+3. Set env vars: `AUTH_SECRET`, the runtime branding variables from step 8,
+   Vipps keys (if used), `CRON_SECRET` (for the subscription cron),
+   notification keys, and `ENABLE_DEV_LOGIN=false` for production.
 4. The build runs `prisma migrate deploy` automatically (see `vercel.json`), and
    the daily charge cron is already configured.
 

@@ -1,5 +1,3 @@
-// Generic starter logo: a rounded mark in an indigo gradient.
-// Replace with your product's mark.
 export function Logo({ size = 28 }: { size?: number }) {
   return (
     <svg
@@ -10,14 +8,20 @@ export function Logo({ size = 28 }: { size?: number }) {
       aria-hidden="true"
     >
       <defs>
-        <linearGradient id="appLogoGrad" x1="0" y1="0" x2="0" y2="1">
-          <stop stopColor="#6366f1" />
-          <stop offset="1" stopColor="#4338ca" />
+        <linearGradient id="vippsStarterLogo" x1="0" y1="0" x2="0" y2="1">
+          <stop stopColor="#ff7a45" />
+          <stop offset="1" stopColor="#ff5b24" />
         </linearGradient>
       </defs>
-      <rect width="512" height="512" rx="112" fill="url(#appLogoGrad)" />
-      <circle cx="256" cy="256" r="120" fill="#ffffff" opacity="0.95" />
-      <circle cx="256" cy="256" r="60" fill="url(#appLogoGrad)" />
+      <rect width="512" height="512" rx="112" fill="url(#vippsStarterLogo)" />
+      <path
+        d="M136 166 256 354 376 166"
+        fill="none"
+        stroke="#fff"
+        strokeWidth="70"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
     </svg>
   );
 }

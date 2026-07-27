@@ -14,8 +14,8 @@ export async function devLogin(
   email = "test@example.com",
 ) {
   await page.goto("/login");
-  await page.getByPlaceholder("Name").fill(name);
-  await page.getByPlaceholder("Email").fill(email);
-  await page.getByRole("button", { name: "Sign in" }).click();
+  await page.locator('input[name="name"]').fill(name);
+  await page.locator('input[name="email"]').fill(email);
+  await page.getByTestId("dev-login-submit").click();
   await page.waitForURL("**/");
 }

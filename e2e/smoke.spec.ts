@@ -12,7 +12,9 @@ test("landing page renders", async ({ page }) => {
 test("dev login works", async ({ page }) => {
   await devLogin(page);
   await page.goto("/profile");
-  await expect(page.getByRole("heading", { name: "Profile" })).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: /^(Profile|Profil)$/ }),
+  ).toBeVisible();
   await page.screenshot({
     path: `${SHOTS_DIR}/02-profile.png`,
     fullPage: true,

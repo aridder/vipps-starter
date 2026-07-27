@@ -50,6 +50,7 @@ export default function LoginPage() {
         >
           <p className="text-sm text-stone-500">{t("login.devNote")}</p>
           <input
+            name="name"
             value={name}
             onChange={(e) => setName(e.target.value)}
             placeholder={t("login.name")}
@@ -57,6 +58,7 @@ export default function LoginPage() {
             className="w-full rounded-xl border border-stone-200 px-3 py-2.5 outline-none focus:border-indigo-500"
           />
           <input
+            name="email"
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
@@ -65,6 +67,7 @@ export default function LoginPage() {
             className="w-full rounded-xl border border-stone-200 px-3 py-2.5 outline-none focus:border-indigo-500"
           />
           <button
+            data-testid="dev-login-submit"
             type="submit"
             disabled={!name || !email}
             className="w-full rounded-xl bg-indigo-600 py-2.5 font-semibold text-white disabled:opacity-50"

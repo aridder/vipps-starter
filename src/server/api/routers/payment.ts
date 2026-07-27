@@ -18,6 +18,10 @@ import {
 import { syncPaymentStatus } from "@/server/payments";
 import { TRPCError as _TRPCError } from "@trpc/server";
 import { PaymentPurpose } from "@prisma/client";
+import {
+  hashAnalyticsId,
+  trackProductEvent,
+} from "@/lib/server-telemetry";
 
 // Load an org-scoped payment + its MSN, or throw. Used by admin actions.
 async function loadPaymentForAdmin(
@@ -120,6 +124,18 @@ export const paymentRouter = createTRPCRouter({
           description,
           returnUrl: `${baseUrl(ctx.headers)}/billing/receipt?ref=${reference}`,
         });
+        trackProductEvent(
+          "billing.started",
+          {
+            billingMode: "one_time",
+            purpose: input.purpose,
+            amountOre: payment.amountOre,
+            captureMode: payment.autoCapture ? "auto" : "reserve",
+          },
+          ctx.session?.user?.id
+            ? { actorIdHash: hashAnalyticsId("user", ctx.session.user.id) }
+            : {},
+        );
         return { redirectUrl, reference };
       } catch (e) {
         await ctx.db.payment.update({
@@ -136,8 +152,25 @@ export const paymentRouter = createTRPCRouter({
   status: publicProcedure
     .input(z.object({ reference: z.string() }))
     .query(async ({ ctx, input }) => {
+      const previous = await ctx.db.payment.findUnique({
+        where: { reference: input.reference },
+        select: { status: true, userId: true },
+      });
       const payment = await syncPaymentStatus(ctx.db, input.reference);
       if (!payment) throw new TRPCError({ code: "NOT_FOUND" });
+      if (payment.status === "PAID" && previous?.status !== "PAID") {
+        trackProductEvent(
+          "billing.completed",
+          {
+            billingMode: "one_time",
+            purpose: payment.purpose,
+            amountOre: payment.amountOre,
+          },
+          previous?.userId
+            ? { actorIdHash: hashAnalyticsId("user", previous.userId) }
+            : {},
+        );
+      }
       return payment;
     }),
 

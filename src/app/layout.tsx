@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { TRPCReactProvider } from "@/trpc/react";
+import { ProductAnalytics } from "@/components/ProductAnalytics";
 import { Nav } from "@/components/Nav";
 import { auth } from "@/server/auth";
 
@@ -28,6 +29,7 @@ export default async function RootLayout({
   return (
     <html lang="en">
       <body className="min-h-dvh bg-stone-100 font-sans text-stone-900 antialiased">
+        <ProductAnalytics />
         <TRPCReactProvider>
           <Nav userName={session?.user?.name} />
           <main className="mx-auto max-w-2xl px-4 py-8">{children}</main>

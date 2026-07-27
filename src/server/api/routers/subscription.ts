@@ -16,6 +16,10 @@ import {
 } from "@/server/vipps-recurring";
 import { syncAgreementStatus } from "@/server/agreements";
 import { AgreementInterval, PaymentPurpose, Role } from "@prisma/client";
+import {
+  hashAnalyticsId,
+  trackProductEvent,
+} from "@/lib/server-telemetry";
 
 // Load an org-scoped agreement + a charge + the MSN, for admin charge actions.
 async function loadChargeForAdmin(
@@ -152,6 +156,15 @@ export const subscriptionRouter = createTRPCRouter({
         });
       }
 
+      trackProductEvent(
+        "subscription.started",
+        {
+          purpose: input.purpose,
+          interval: input.interval,
+          amountOre,
+        },
+        { actorIdHash: hashAnalyticsId("user", ctx.userId) },
+      );
       return { confirmationUrl: vipps.vippsConfirmationUrl, id: agreementId };
     }),
 
@@ -160,7 +173,7 @@ export const subscriptionRouter = createTRPCRouter({
     .query(async ({ ctx, input }) => {
       const existing = await ctx.db.agreement.findUnique({
         where: { id: input.id },
-        select: { userId: true },
+        select: { userId: true, status: true },
       });
       if (!existing) throw new TRPCError({ code: "NOT_FOUND" });
       const isAdmin =
@@ -168,7 +181,19 @@ export const subscriptionRouter = createTRPCRouter({
       if (existing.userId !== ctx.userId && !isAdmin) {
         throw new TRPCError({ code: "FORBIDDEN" });
       }
-      return syncAgreementStatus(ctx.db, input.id);
+      const agreement = await syncAgreementStatus(ctx.db, input.id);
+      if (agreement?.status === "ACTIVE" && existing.status !== "ACTIVE") {
+        trackProductEvent(
+          "subscription.completed",
+          {
+            purpose: agreement.purpose,
+            interval: agreement.interval,
+            amountOre: agreement.amountOre,
+          },
+          { actorIdHash: hashAnalyticsId("user", existing.userId) },
+        );
+      }
+      return agreement;
     }),
 
   mine: protectedProcedure.query(async ({ ctx }) => {

@@ -23,6 +23,8 @@ export default function LoginPage() {
 
       {hasVipps && (
         <button
+          data-analytics-event="auth.login_started"
+          data-analytics-label="vipps"
           onClick={() => signIn("vipps", { callbackUrl: "/" })}
           className="w-full rounded-xl bg-[#ff5b24] py-3 font-semibold text-white"
         >
@@ -66,6 +68,8 @@ export default function LoginPage() {
           />
           <button
             type="submit"
+            data-analytics-event="auth.login_started"
+            data-analytics-label="dev"
             disabled={!name || !email}
             className="w-full rounded-xl bg-indigo-600 py-2.5 font-semibold text-white disabled:opacity-50"
           >

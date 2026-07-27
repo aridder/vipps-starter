@@ -158,11 +158,7 @@ export const subscriptionRouter = createTRPCRouter({
 
       trackProductEvent(
         "subscription.started",
-        {
-          purpose: input.purpose,
-          interval: input.interval,
-          amountOre,
-        },
+        { billingMode: "recurring" },
         { actorIdHash: hashAnalyticsId("user", ctx.userId) },
       );
       return { confirmationUrl: vipps.vippsConfirmationUrl, id: agreementId };
@@ -182,17 +178,6 @@ export const subscriptionRouter = createTRPCRouter({
         throw new TRPCError({ code: "FORBIDDEN" });
       }
       const agreement = await syncAgreementStatus(ctx.db, input.id);
-      if (agreement?.status === "ACTIVE" && existing.status !== "ACTIVE") {
-        trackProductEvent(
-          "subscription.completed",
-          {
-            purpose: agreement.purpose,
-            interval: agreement.interval,
-            amountOre: agreement.amountOre,
-          },
-          { actorIdHash: hashAnalyticsId("user", existing.userId) },
-        );
-      }
       return agreement;
     }),
 

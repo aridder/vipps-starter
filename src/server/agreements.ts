@@ -12,6 +12,10 @@ import {
   getCharge,
 } from "@/server/vipps-recurring";
 import { notifyOrgAdmins, notifyUsers } from "@/server/notify";
+import {
+  hashAnalyticsId,
+  trackProductEvent,
+} from "@/lib/server-telemetry";
 
 // Days before due that we create the charge at Vipps.
 const LEAD_DAYS = 3;
@@ -124,22 +128,38 @@ export async function syncAgreementStatus(
     if (newStatus !== agreement.status) {
       const becameActive =
         newStatus === "ACTIVE" && agreement.status !== "ACTIVE";
-      current = await db.agreement.update({
-        where: { id: agreement.id },
-        data: {
+      const data = {
           status: newStatus,
           ...(becameActive && !agreement.nextChargeDate
             ? { nextChargeDate: addInterval(new Date(), agreement.interval) }
             : {}),
-        },
+        };
+      const activatedNow = becameActive
+        ? (
+            await db.agreement.updateMany({
+              where: { id: agreement.id, status: { not: "ACTIVE" } },
+              data,
+            })
+          ).count === 1
+        : false;
+      if (!activatedNow) {
+        await db.agreement.update({ where: { id: agreement.id }, data });
+      }
+      current = await db.agreement.findUniqueOrThrow({
+        where: { id: agreement.id },
       });
-      if (becameActive) {
+      if (activatedNow) {
         await notifyUsers(db, [agreement.userId], {
           type: "PAYMENT",
           title: "Subscription active 🎉",
           body: agreement.description,
           link: "/billing",
         });
+        trackProductEvent(
+          "subscription.completed",
+          { billingMode: "recurring" },
+          { actorIdHash: hashAnalyticsId("user", agreement.userId) },
+        );
       }
     }
   } catch (e) {

@@ -4,8 +4,10 @@ import { orgRouter } from "@/server/api/routers/org";
 import { paymentRouter } from "@/server/api/routers/payment";
 import { subscriptionRouter } from "@/server/api/routers/subscription";
 import { notificationRouter } from "@/server/api/routers/notification";
+import { analyticsRouter } from "@/server/api/routers/analytics";
 
 export const appRouter = createTRPCRouter({
+  analytics: analyticsRouter,
   meta: metaRouter,
   org: orgRouter,
   payment: paymentRouter,

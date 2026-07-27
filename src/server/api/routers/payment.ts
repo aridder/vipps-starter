@@ -128,8 +128,6 @@ export const paymentRouter = createTRPCRouter({
           "billing.started",
           {
             billingMode: "one_time",
-            purpose: input.purpose,
-            amountOre: payment.amountOre,
             captureMode: payment.autoCapture ? "auto" : "reserve",
           },
           ctx.session?.user?.id
@@ -152,25 +150,8 @@ export const paymentRouter = createTRPCRouter({
   status: publicProcedure
     .input(z.object({ reference: z.string() }))
     .query(async ({ ctx, input }) => {
-      const previous = await ctx.db.payment.findUnique({
-        where: { reference: input.reference },
-        select: { status: true, userId: true },
-      });
       const payment = await syncPaymentStatus(ctx.db, input.reference);
       if (!payment) throw new TRPCError({ code: "NOT_FOUND" });
-      if (payment.status === "PAID" && previous?.status !== "PAID") {
-        trackProductEvent(
-          "billing.completed",
-          {
-            billingMode: "one_time",
-            purpose: payment.purpose,
-            amountOre: payment.amountOre,
-          },
-          previous?.userId
-            ? { actorIdHash: hashAnalyticsId("user", previous.userId) }
-            : {},
-        );
-      }
       return payment;
     }),
 

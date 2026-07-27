@@ -3,6 +3,10 @@ import Credentials from "next-auth/providers/credentials";
 import type { Provider } from "next-auth/providers";
 import { Role } from "@prisma/client";
 import { db } from "@/server/db";
+import {
+  hashAnalyticsId,
+  trackProductEvent,
+} from "@/lib/server-telemetry";
 
 declare module "next-auth" {
   interface Session {
@@ -167,8 +171,18 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         });
         await ensureMembership(dbUser.id, p.email);
         token.userId = dbUser.id;
+        trackProductEvent(
+          "auth.login_completed",
+          { provider: "vipps", isNewUser: !existing },
+          { actorIdHash: hashAnalyticsId("user", dbUser.id) },
+        );
       } else if (user && "id" in user && user.id) {
         token.userId = user.id;
+        trackProductEvent(
+          "auth.login_completed",
+          { provider: account?.provider ?? "unknown" },
+          { actorIdHash: hashAnalyticsId("user", user.id) },
+        );
       }
       return token;
     },

@@ -12,6 +12,10 @@ import {
   deleteWebhooksForUrl,
   registerWebhook,
 } from "@/server/vipps-webhooks";
+import {
+  hashAnalyticsId,
+  trackProductEvent,
+} from "@/lib/server-telemetry";
 
 function slugify(name: string): string {
   return (
@@ -94,6 +98,11 @@ export const orgRouter = createTRPCRouter({
         where: { id: ctx.userId },
         data: { activeOrgId: org.id },
       });
+      trackProductEvent(
+        "organization.created",
+        {},
+        { actorIdHash: hashAnalyticsId("user", ctx.userId) },
+      );
       return org;
     }),
 
@@ -190,6 +199,11 @@ export const orgRouter = createTRPCRouter({
         vippsWebhookSecret: registration.secret,
       },
     });
+    trackProductEvent(
+      "organization.vipps_connected",
+      {},
+      { actorIdHash: hashAnalyticsId("user", ctx.userId) },
+    );
     return { connected: true };
   }),
 

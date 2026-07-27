@@ -6,6 +6,10 @@ import {
   vippsConfigured,
 } from "@/server/vipps";
 import { notifyOrgAdmins } from "@/server/notify";
+import {
+  hashAnalyticsId,
+  trackProductEvent,
+} from "@/lib/server-telemetry";
 
 /**
  * Fetches the authoritative payment status from Vipps and updates our Payment.
@@ -79,19 +83,37 @@ export async function syncPaymentStatus(db: PrismaClient, reference: string) {
     return payment;
   }
 
-  const wasPaid = payment.status === "PAID";
-  const updated = await db.payment.update({
+  const update = { status: newStatus, vippsState, capturedOre, refundedOre };
+  const completedNow =
+    newStatus === "PAID" && payment.status !== "PAID"
+      ? (
+          await db.payment.updateMany({
+            where: { id: payment.id, status: { not: "PAID" } },
+            data: update,
+          })
+        ).count === 1
+      : false;
+  if (!completedNow) {
+    await db.payment.update({ where: { id: payment.id }, data: update });
+  }
+  const updated = await db.payment.findUniqueOrThrow({
     where: { id: payment.id },
-    data: { status: newStatus, vippsState, capturedOre, refundedOre },
   });
 
-  if (newStatus === "PAID" && !wasPaid) {
+  if (completedNow) {
     await notifyOrgAdmins(db, payment.orgId, {
       type: "PAYMENT",
       title: `Payment received: ${capturedOre / 100} kr`,
       body: payment.description,
       link: "/billing/admin",
     });
+    trackProductEvent(
+      "billing.completed",
+      { billingMode: "one_time" },
+      payment.userId
+        ? { actorIdHash: hashAnalyticsId("user", payment.userId) }
+        : {},
+    );
   }
 
   return updated;

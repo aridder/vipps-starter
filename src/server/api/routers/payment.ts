@@ -18,6 +18,10 @@ import {
 import { syncPaymentStatus } from "@/server/payments";
 import { TRPCError as _TRPCError } from "@trpc/server";
 import { PaymentPurpose } from "@prisma/client";
+import {
+  hashAnalyticsId,
+  trackProductEvent,
+} from "@/lib/server-telemetry";
 
 // Load an org-scoped payment + its MSN, or throw. Used by admin actions.
 async function loadPaymentForAdmin(
@@ -120,6 +124,16 @@ export const paymentRouter = createTRPCRouter({
           description,
           returnUrl: `${baseUrl(ctx.headers)}/billing/receipt?ref=${reference}`,
         });
+        trackProductEvent(
+          "billing.started",
+          {
+            billingMode: "one_time",
+            captureMode: payment.autoCapture ? "auto" : "reserve",
+          },
+          ctx.session?.user?.id
+            ? { actorIdHash: hashAnalyticsId("user", ctx.session.user.id) }
+            : {},
+        );
         return { redirectUrl, reference };
       } catch (e) {
         await ctx.db.payment.update({

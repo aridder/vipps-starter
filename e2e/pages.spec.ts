@@ -9,15 +9,21 @@ test.beforeEach(async ({ page }) => {
 
 test("billing page", async ({ page }) => {
   await page.goto("/billing");
-  await expect(page.getByRole("heading", { name: "Billing" })).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "Betalinger og avtaler" }),
+  ).toBeVisible();
+  await expect(page.getByText("Du har ingen aktive avtaler.")).toBeVisible();
+  await expect(page.getByText("Ingen betalinger ennå.")).toBeVisible();
   // Without Vipps keys the page shows the "activate" notice — still a good shot.
   await page.screenshot({ path: `${SHOTS_DIR}/04-billing.png`, fullPage: true });
 });
 
 test("billing admin console", async ({ page }) => {
   await page.goto("/billing/admin");
-  await expect(page.getByRole("heading", { name: "Billing" })).toBeVisible();
-  await expect(page.getByRole("button", { name: "payments" })).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "Vipps driftssentral" }),
+  ).toBeVisible();
+  await expect(page.getByRole("button", { name: "Betalinger" })).toBeVisible();
   await page.screenshot({
     path: `${SHOTS_DIR}/07-billing-admin.png`,
     fullPage: true,
@@ -27,7 +33,7 @@ test("billing admin console", async ({ page }) => {
 test("settings page", async ({ page }) => {
   await page.goto("/settings");
   await expect(page.getByTestId("settings-page")).toBeVisible();
-  await expect(page.getByText("Organization")).toBeVisible();
+  await expect(page.getByText("Organisasjon", { exact: true })).toBeVisible();
   await page.screenshot({
     path: `${SHOTS_DIR}/05-settings.png`,
     fullPage: true,

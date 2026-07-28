@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { api } from "@/trpc/react";
 import { Role } from "@prisma/client";
+import { useI18n } from "@/components/I18nProvider";
 
 const ROLE_LABELS: Record<Role, string> = {
   MEMBER: "Member",
@@ -12,6 +13,7 @@ const ROLE_LABELS: Record<Role, string> = {
 const EDITABLE_ROLES: Role[] = [Role.ADMIN, Role.OWNER];
 
 export default function SettingsPage() {
+  const { locale, t } = useI18n();
   const utils = api.useUtils();
   const features = api.meta.features.useQuery();
   const me = api.meta.me.useQuery(undefined, { retry: false });
@@ -53,7 +55,7 @@ export default function SettingsPage() {
   });
 
   if (me.isSuccess && !me.data.isAdmin) {
-    return <p className="text-sm text-stone-500">Requires admin access.</p>;
+    return <p className="text-sm text-stone-500">{t("settings.requiresAdmin")}</p>;
   }
 
   function toggleRole(userId: string, roles: Role[], role: Role) {
@@ -65,30 +67,49 @@ export default function SettingsPage() {
   const s = settings.data;
 
   return (
-    <div className="space-y-5" data-testid="settings-page">
-      <h1 className="text-xl font-bold">Settings</h1>
+    <div className="mx-auto max-w-4xl space-y-6" data-testid="settings-page">
+      <header className="rounded-[2rem] bg-stone-900 p-6 text-white sm:p-8">
+        <div className="text-xs font-black uppercase tracking-[0.2em] text-indigo-300">
+          {locale === "no" ? "Kun administrator" : "Administrators only"}
+        </div>
+        <h1 className="mt-3 text-3xl font-black">{t("settings.title")}</h1>
+        <p className="mt-2 max-w-2xl text-sm leading-6 text-stone-300">
+          {locale === "no"
+            ? "Koble organisasjonen til riktig Vipps-salgssted og styr hvem som kan administrere betalinger. Nøkler håndteres av plattformen – MSN identifiserer mottakeren."
+            : "Connect the organization to the correct Vipps sales unit and control who can manage payments. Keys are handled by the platform – the MSN identifies the recipient."}
+        </p>
+      </header>
 
       {/* Organization info */}
       <form
-        className="space-y-2 rounded-2xl bg-white p-4 shadow-sm"
+        className="space-y-3 rounded-[2rem] border border-stone-200 bg-white p-5 shadow-sm sm:p-6"
         onSubmit={(e) => {
           e.preventDefault();
           updateInfo.mutate({ name, vippsMsn: msn || undefined });
         }}
       >
-        <h2 className="text-sm font-semibold text-stone-600">Organization</h2>
+        <div>
+          <h2 className="font-black">{t("settings.org")}</h2>
+          <p className="mt-1 text-sm text-stone-500">
+            {locale === "no"
+              ? "MSN er Vipps sitt nummer for salgsstedet som skal motta pengene."
+              : "The MSN is Vipps' identifier for the sales unit that receives the funds."}
+          </p>
+        </div>
         <input
+          aria-label={t("settings.orgName")}
           value={name}
           onChange={(e) => setName(e.target.value)}
-          placeholder="Organization name"
+          placeholder={t("settings.orgName")}
           required
           className="w-full rounded-xl border border-stone-200 px-3 py-2 text-sm outline-none focus:border-indigo-500"
         />
         <input
+          aria-label={t("settings.msn")}
           value={msn}
           onChange={(e) => setMsn(e.target.value)}
           inputMode="numeric"
-          placeholder="Vipps MSN (digits only)"
+          placeholder={t("settings.msn")}
           className="w-full rounded-xl border border-stone-200 px-3 py-2 text-sm outline-none focus:border-indigo-500"
         />
         <button
@@ -96,28 +117,33 @@ export default function SettingsPage() {
           disabled={updateInfo.isPending}
           className="rounded-xl bg-indigo-600 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
         >
-          Save
+          {t("settings.save")}
         </button>
       </form>
 
       {/* Vipps connection */}
       {s && (
-        <div className="space-y-2 rounded-2xl bg-white p-4 shadow-sm">
-          <h2 className="text-sm font-semibold text-stone-600">
-            Vipps connection
-          </h2>
+        <div className="space-y-3 rounded-[2rem] border border-stone-200 bg-white p-5 shadow-sm sm:p-6">
+          <div>
+            <h2 className="font-black">{t("settings.vippsConnection")}</h2>
+            <p className="mt-1 text-sm text-stone-500">
+              {locale === "no"
+                ? "Tilkobling registrerer organisasjonens webhook og aktiverer betaling mot valgt MSN."
+                : "Connecting registers the organization's webhook and enables payments for the selected MSN."}
+            </p>
+          </div>
           {!s.vippsPlatformReady ? (
             <p className="text-xs text-stone-500">
-              Platform is missing Vipps keys (set by the operator).
+              {t("settings.platformMissing")}
             </p>
           ) : !s.vippsMsn ? (
             <p className="text-xs text-stone-500">
-              Enter the MSN above and save, then connect.
+              {t("settings.enterMsn")}
             </p>
           ) : s.vippsConnected ? (
             <>
               <div className="flex items-center gap-2 text-sm font-medium text-emerald-700">
-                <span>✅</span> Connected · MSN {s.vippsMsn}
+                <span>●</span> {t("settings.connected", { msn: s.vippsMsn })}
               </div>
               {disconnectVipps.error && (
                 <p className="text-xs text-red-600">
@@ -129,14 +155,13 @@ export default function SettingsPage() {
                 disabled={disconnectVipps.isPending}
                 className="rounded-xl bg-stone-100 px-4 py-2 text-sm font-semibold text-stone-600 disabled:opacity-50"
               >
-                Disconnect
+                {t("settings.disconnect")}
               </button>
             </>
           ) : (
             <>
               <p className="text-xs text-stone-500">
-                MSN {s.vippsMsn} saved. Connect to register the webhook and
-                activate payments for this organization.
+                {t("settings.msnSaved", { msn: s.vippsMsn })}
               </p>
               {connectVipps.error && (
                 <p className="text-xs text-red-600">
@@ -148,7 +173,7 @@ export default function SettingsPage() {
                 disabled={connectVipps.isPending}
                 className="rounded-xl bg-[#ff5b24] px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
               >
-                {connectVipps.isPending ? "Connecting…" : "Connect to Vipps"}
+                {connectVipps.isPending ? t("settings.connecting") : t("settings.connect")}
               </button>
             </>
           )}
@@ -159,13 +184,20 @@ export default function SettingsPage() {
       {features.data?.multiTenant && (
         <>
           <form
-            className="space-y-2 rounded-2xl bg-white p-4 shadow-sm"
+            className="space-y-3 rounded-[2rem] border border-stone-200 bg-white p-5 shadow-sm sm:p-6"
             onSubmit={(e) => {
               e.preventDefault();
               if (email) addMember.mutate({ email });
             }}
           >
-            <h2 className="text-sm font-semibold text-stone-600">Add member</h2>
+            <div>
+              <h2 className="font-black">{t("settings.addMember")}</h2>
+              <p className="mt-1 text-sm text-stone-500">
+                {locale === "no"
+                  ? "Bare ADMIN og OWNER får tilgang til driftssentralen og pengeoperasjoner."
+                  : "Only ADMIN and OWNER can access operations and money actions."}
+              </p>
+            </div>
             <div className="flex gap-2">
               <input
                 type="email"
@@ -179,7 +211,7 @@ export default function SettingsPage() {
                 disabled={addMember.isPending || !email}
                 className="rounded-xl bg-indigo-600 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
               >
-                Add
+                {t("settings.add")}
               </button>
             </div>
           </form>
@@ -201,7 +233,7 @@ export default function SettingsPage() {
                       onClick={() => removeMember.mutate({ userId: m.userId })}
                       className="shrink-0 text-xs text-red-500 underline"
                     >
-                      remove
+                      {t("settings.remove")}
                     </button>
                   )}
                 </div>

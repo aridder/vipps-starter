@@ -5,7 +5,16 @@ test.beforeAll(() => ensureShotsDir());
 
 test("landing page renders", async ({ page }) => {
   await page.goto("/");
-  await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
+  await expect(
+    page.getByRole("heading", {
+      level: 1,
+      name: "Hele Vipps-reisen. Ferdig bygget.",
+    }),
+  ).toBeVisible();
+  await page.getByRole("button", { name: "Jeg er administrator" }).click();
+  await expect(
+    page.getByRole("heading", { name: "Fra innbetaling til avstemming" }),
+  ).toBeVisible();
   await page.screenshot({ path: `${SHOTS_DIR}/01-landing.png`, fullPage: true });
 });
 

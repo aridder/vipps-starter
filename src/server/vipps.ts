@@ -112,12 +112,13 @@ export async function vippsApiStatus(): Promise<{
     await getAccessToken();
     return { available: true };
   } catch (error) {
+    console.error("Vipps API capability check failed:", error);
+    const message = error instanceof Error ? error.message : "";
     return {
       available: false,
-      reason:
-        error instanceof Error
-          ? error.message
-          : "Vipps kunne ikke bekrefte API-tilgang.",
+      reason: message.includes("invalid_scope")
+        ? "Vipps-betalingsavtalen er ikke aktivert for dette nøkkelsettet."
+        : "Vipps kunne ikke bekrefte betalings-API-et akkurat nå.",
     };
   }
 }

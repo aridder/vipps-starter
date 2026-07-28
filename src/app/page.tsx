@@ -227,37 +227,10 @@ export default async function LandingPage() {
         </div>
       </section>
 
-      <div className="grid gap-6 lg:grid-cols-[1.15fr_0.85fr] lg:items-start">
-        <DonateWidget
-          siteName={site.name}
-          recipientName={site.author.name}
-        />
-        <section className="rounded-[2rem] bg-indigo-700 p-6 text-white sm:p-8">
-          <div className="text-xs font-black uppercase tracking-[0.2em] text-indigo-200">
-            {no ? "Slik er det sikret" : "How it is secured"}
-          </div>
-          <h2 className="mt-3 text-2xl font-black">
-            {no ? "En webhook er et varsel – ikke en fasit." : "A webhook is a signal – not the source of truth."}
-          </h2>
-          <p className="mt-3 text-sm leading-6 text-indigo-100">
-            {no
-              ? "Alle webhooks signaturvalideres. Deretter henter serveren betalingsstatus direkte fra Vipps før lokal status oppdateres. Det gir en robust flyt også ved forsinkede eller dupliserte hendelser."
-              : "Every webhook is signature validated. The server then fetches payment status directly from Vipps before updating local state, keeping the flow robust across delayed or duplicate events."}
-          </p>
-          <div className="mt-6 space-y-3 text-sm">
-            {[
-              no ? "✓ HMAC-signatur håndheves" : "✓ HMAC signature enforced",
-              no ? "✓ Idempotente betalingsoperasjoner" : "✓ Idempotent payment operations",
-              no ? "✓ Rollebeskyttede adminhandlinger" : "✓ Role-protected admin actions",
-              no ? "✓ Ingen kortdata lagres i appen" : "✓ No card data stored in the app",
-            ].map((item) => (
-              <div key={item} className="rounded-xl bg-white/10 px-3 py-2.5 font-semibold">
-                {item}
-              </div>
-            ))}
-          </div>
-        </section>
-      </div>
+      <DonateWidget
+        siteName={site.name}
+        recipientName={site.author.name}
+      />
 
       <section className="grid overflow-hidden rounded-[2rem] bg-stone-900 text-stone-100 md:grid-cols-[1.2fr_0.8fr]">
         <div className="p-6 sm:p-8">

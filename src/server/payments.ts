@@ -45,6 +45,7 @@ export async function syncPaymentStatus(db: PrismaClient, reference: string) {
   let newStatus: PaymentStatus = payment.status;
   let capturedOre = payment.capturedOre;
   let refundedOre = payment.refundedOre;
+  let amountOre = payment.amountOre;
   let vippsState: string | undefined;
 
   try {
@@ -52,11 +53,15 @@ export async function syncPaymentStatus(db: PrismaClient, reference: string) {
     vippsState = info.state;
     capturedOre = info.aggregate?.capturedAmount?.value ?? capturedOre;
     refundedOre = info.aggregate?.refundedAmount?.value ?? refundedOre;
+    const authorizedOre = info.aggregate?.authorizedAmount?.value;
+    // Express adds the selected shipping option during authorization. Persist
+    // Vipps' final authorized total so capture, refund and admin KPIs stay exact.
+    if (authorizedOre && authorizedOre > amountOre) amountOre = authorizedOre;
 
     if (info.state === "AUTHORIZED") {
-      if (payment.autoCapture && capturedOre < payment.amountOre) {
-        await capturePayment(msn, reference, payment.amountOre - capturedOre);
-        capturedOre = payment.amountOre;
+      if (payment.autoCapture && capturedOre < amountOre) {
+        await capturePayment(msn, reference, amountOre - capturedOre);
+        capturedOre = amountOre;
       }
       if (capturedOre > 0) {
         newStatus =
@@ -83,7 +88,13 @@ export async function syncPaymentStatus(db: PrismaClient, reference: string) {
     return payment;
   }
 
-  const update = { status: newStatus, vippsState, capturedOre, refundedOre };
+  const update = {
+    status: newStatus,
+    vippsState,
+    amountOre,
+    capturedOre,
+    refundedOre,
+  };
   const completedNow =
     newStatus === "PAID" && payment.status !== "PAID"
       ? (

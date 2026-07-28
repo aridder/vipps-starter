@@ -12,6 +12,7 @@ test("billing page", async ({ page }) => {
   await expect(
     page.getByRole("heading", { name: "Betalinger og avtaler" }),
   ).toBeVisible();
+  await expect(page.getByText("Vipps-nøkler mangler.")).toBeVisible();
   await expect(page.getByText("Du har ingen aktive avtaler.")).toBeVisible();
   await expect(page.getByText("Ingen betalinger ennå.")).toBeVisible();
   // Without Vipps keys the page shows the "activate" notice — still a good shot.
@@ -24,6 +25,10 @@ test("billing admin console", async ({ page }) => {
     page.getByRole("heading", { name: "Vipps driftssentral" }),
   ).toBeVisible();
   await expect(page.getByRole("button", { name: "Betalinger" })).toBeVisible();
+  await page.getByRole("button", { name: "Avstemming" }).click();
+  await expect(
+    page.getByRole("heading", { name: "Avstem penger og gebyrer" }),
+  ).toBeVisible();
   await page.screenshot({
     path: `${SHOTS_DIR}/07-billing-admin.png`,
     fullPage: true,

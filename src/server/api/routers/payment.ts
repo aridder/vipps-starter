@@ -11,10 +11,18 @@ import {
   cancelPayment,
   capturePayment,
   createPayment,
+  getPayment,
+  getPaymentEvents,
+  oneLineReceipt,
   refundPayment,
   resolveMsn,
+  vippsApiStatus,
   vippsConfigured,
 } from "@/server/vipps";
+import {
+  expressShipping,
+  getExpressProduct,
+} from "@/server/vipps-express";
 import { syncPaymentStatus } from "@/server/payments";
 import { TRPCError as _TRPCError } from "@trpc/server";
 import { PaymentPurpose } from "@prisma/client";
@@ -67,7 +75,8 @@ export const paymentRouter = createTRPCRouter({
       z.object({
         purpose: ONE_OFF_PURPOSE,
         amountKr: z.number().int().min(1).max(100000),
-        description: z.string().max(100).optional(),
+        description: z.string().min(3).max(100).optional(),
+        flow: z.enum(["WEB_REDIRECT", "QR"]).default("WEB_REDIRECT"),
         // "reserve" holds the funds for an admin to capture later.
         capture: z.enum(["auto", "reserve"]).default("auto"),
       }),
@@ -78,6 +87,9 @@ export const paymentRouter = createTRPCRouter({
           code: "PRECONDITION_FAILED",
           message: "Vipps payments are not configured yet.",
         });
+      }
+      if (input.flow === "QR" && !isEnabled("paymentQr")) {
+        throw new TRPCError({ code: "NOT_FOUND" });
       }
       const org = ctx.orgId
         ? await ctx.db.organization.findUnique({
@@ -117,18 +129,31 @@ export const paymentRouter = createTRPCRouter({
       });
 
       try {
+        const receiptUrl = `${baseUrl(ctx.headers)}/billing/receipt?ref=${reference}`;
         const { redirectUrl } = await createPayment({
           msn,
           reference,
           amountOre: payment.amountOre,
           description,
-          returnUrl: `${baseUrl(ctx.headers)}/billing/receipt?ref=${reference}`,
+          returnUrl: receiptUrl,
+          flow: input.flow,
+          receipt: oneLineReceipt({
+            reference,
+            name: description,
+            amountOre: payment.amountOre,
+            // Vipps requires a public secure product URL. Local test origins are
+            // intentionally omitted from the customer receipt.
+            productUrl: receiptUrl.startsWith("https://")
+              ? receiptUrl
+              : undefined,
+          }),
         });
         trackProductEvent(
           "billing.started",
           {
             billingMode: "one_time",
             captureMode: payment.autoCapture ? "auto" : "reserve",
+            userFlow: input.flow,
           },
           ctx.session?.user?.id
             ? { actorIdHash: hashAnalyticsId("user", ctx.session.user.id) }
@@ -147,6 +172,79 @@ export const paymentRouter = createTRPCRouter({
       }
     }),
 
+  createExpress: publicProcedure.mutation(async ({ ctx }) => {
+    if (!isEnabled("paymentExpress")) {
+      throw new TRPCError({ code: "NOT_FOUND" });
+    }
+    const product = getExpressProduct();
+    if (!product) {
+      throw new TRPCError({
+        code: "PRECONDITION_FAILED",
+        message: "Express-produktet er ikke konfigurert.",
+      });
+    }
+    const apiStatus = await vippsApiStatus();
+    if (!apiStatus.available) {
+      throw new TRPCError({
+        code: "PRECONDITION_FAILED",
+        message: apiStatus.reason,
+      });
+    }
+    const org = ctx.orgId
+      ? await ctx.db.organization.findUnique({
+          where: { id: ctx.orgId },
+          select: { vippsMsn: true },
+        })
+      : null;
+    const msn = resolveMsn(org?.vippsMsn);
+    if (!msn) {
+      throw new TRPCError({
+        code: "PRECONDITION_FAILED",
+        message: "Organisasjonen mangler Vipps MSN.",
+      });
+    }
+
+    const reference = `exp-${crypto.randomUUID()}`;
+    const payment = await ctx.db.payment.create({
+      data: {
+        reference,
+        purpose: PaymentPurpose.ONE_TIME,
+        amountOre: product.priceOre,
+        description: product.description,
+        orgId: ctx.orgId,
+        userId: ctx.session?.user?.id,
+        autoCapture: true,
+      },
+    });
+    try {
+      const result = await createPayment({
+        msn,
+        reference,
+        amountOre: product.priceOre,
+        description: product.description,
+        returnUrl: `${baseUrl(ctx.headers)}/billing/receipt?ref=${reference}`,
+        shipping: expressShipping(product),
+      });
+      trackProductEvent(
+        "billing.started",
+        { billingMode: "express", productId: product.id },
+        ctx.session?.user?.id
+          ? { actorIdHash: hashAnalyticsId("user", ctx.session.user.id) }
+          : {},
+      );
+      return { ...result, reference };
+    } catch (error) {
+      await ctx.db.payment.update({
+        where: { id: payment.id },
+        data: { status: "FAILED" },
+      });
+      throw new TRPCError({
+        code: "INTERNAL_SERVER_ERROR",
+        message: error instanceof Error ? error.message : "Vipps-feil",
+      });
+    }
+  }),
+
   status: publicProcedure
     .input(z.object({ reference: z.string() }))
     .query(async ({ ctx, input }) => {
@@ -156,14 +254,41 @@ export const paymentRouter = createTRPCRouter({
     }),
 
   available: publicProcedure.query(async ({ ctx }) => {
-    if (!vippsConfigured()) return { available: false };
+    if (!vippsConfigured()) {
+      return {
+        available: false,
+        reason: "Vipps-nøkler mangler.",
+        express: null,
+      };
+    }
     const org = ctx.orgId
       ? await ctx.db.organization.findUnique({
           where: { id: ctx.orgId },
           select: { vippsMsn: true },
         })
       : null;
-    return { available: !!resolveMsn(org?.vippsMsn) };
+    if (!resolveMsn(org?.vippsMsn)) {
+      return {
+        available: false,
+        reason: "Organisasjonen mangler Vipps MSN.",
+        express: null,
+      };
+    }
+    const status = await vippsApiStatus();
+    const express = isEnabled("paymentExpress") ? getExpressProduct() : null;
+    return {
+      ...status,
+      express: express
+        ? {
+            id: express.id,
+            name: express.name,
+            description: express.description,
+            priceOre: express.priceOre,
+            shippingOre: express.shippingOre,
+            shippingName: express.shippingName,
+          }
+        : null,
+    };
   }),
 
   mine: protectedProcedure.query(async ({ ctx }) => {
@@ -195,6 +320,25 @@ export const paymentRouter = createTRPCRouter({
       reservedCount: payments.filter((p) => p.status === "AUTHORIZED").length,
     };
   }),
+
+  details: paymentAdminProcedure
+    .input(z.object({ reference: z.string() }))
+    .query(async ({ ctx, input }) => {
+      const { msn } = await loadPaymentForAdmin(ctx, input.reference);
+      const [payment, events] = await Promise.all([
+        getPayment(msn, input.reference),
+        getPaymentEvents(msn, input.reference),
+      ]);
+      return {
+        state: payment.state,
+        shippingDetails: payment.shippingDetails ?? null,
+        userDetails: payment.userDetails ?? null,
+        events: events
+          .slice()
+          .sort((a, b) => b.timestamp.localeCompare(a.timestamp))
+          .slice(0, 30),
+      };
+    }),
 
   // ── Admin actions (capture / refund / cancel) ─────────────────────────
   capture: paymentAdminProcedure

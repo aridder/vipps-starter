@@ -106,7 +106,9 @@ export default function BillingPage() {
             <div className="font-black">
               {locale === "no" ? "Vipps-betaling er ikke tilgjengelig akkurat nå" : "Vipps payment is not available right now"}
             </div>
-            <p className="mt-1">{t("billing.notConfigured")}</p>
+            <p className="mt-1">
+              {available.data?.reason ?? t("billing.notConfigured")}
+            </p>
           </div>
         ) : (
           <div className="space-y-5 rounded-[2rem] border border-stone-200 bg-white p-5 shadow-sm sm:p-7">
@@ -130,6 +132,10 @@ export default function BillingPage() {
           </div>
         )}
       </section>
+
+      {on && available.data?.express && (
+        <ExpressCard product={available.data.express} />
+      )}
 
       {loggedIn && (
         <div className="grid gap-6 lg:grid-cols-2">
@@ -169,11 +175,36 @@ function ModeButton({
 
 function OnceForm() {
   const { locale, t } = useI18n();
+  const features = api.meta.features.useQuery();
   const [purpose, setPurpose] = useState<"ONE_TIME" | "DONATION">("ONE_TIME");
   const [amount, setAmount] = useState("100");
+  const [flow, setFlow] = useState<"WEB_REDIRECT" | "QR">("WEB_REDIRECT");
+  const [qrPayment, setQrPayment] = useState<{
+    reference: string;
+    imageUrl: string;
+  } | null>(null);
   const create = api.payment.create.useMutation({
-    onSuccess: (result) => (window.location.href = result.redirectUrl),
+    onSuccess: (result) => {
+      if (flow === "QR") {
+        setQrPayment({
+          reference: result.reference,
+          imageUrl: result.redirectUrl,
+        });
+      } else {
+        window.location.href = result.redirectUrl;
+      }
+    },
   });
+
+  if (qrPayment) {
+    return (
+      <QrPayment
+        reference={qrPayment.reference}
+        imageUrl={qrPayment.imageUrl}
+        onClose={() => setQrPayment(null)}
+      />
+    );
+  }
 
   return (
     <div className="space-y-5">
@@ -195,6 +226,49 @@ function OnceForm() {
         setAmount={setAmount}
         label={t("billing.amount")}
       />
+      {features.data?.paymentQr && (
+        <div>
+          <div className="mb-2 text-xs font-black uppercase tracking-wider text-stone-400">
+            {locale === "no" ? "Hvordan vil du åpne Vipps?" : "How should Vipps open?"}
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            <button
+              type="button"
+              aria-pressed={flow === "WEB_REDIRECT"}
+              onClick={() => setFlow("WEB_REDIRECT")}
+              className={`rounded-xl p-3 text-left text-sm ${
+                flow === "WEB_REDIRECT"
+                  ? "bg-stone-900 text-white"
+                  : "bg-stone-100 text-stone-600"
+              }`}
+            >
+              <span className="block font-black">
+                {locale === "no" ? "Denne enheten" : "This device"}
+              </span>
+              <span className="mt-0.5 block text-xs opacity-70">
+                {locale === "no" ? "Vanlig Vipps-flyt" : "Standard Vipps flow"}
+              </span>
+            </button>
+            <button
+              type="button"
+              aria-pressed={flow === "QR"}
+              onClick={() => setFlow("QR")}
+              className={`rounded-xl p-3 text-left text-sm ${
+                flow === "QR"
+                  ? "bg-stone-900 text-white"
+                  : "bg-stone-100 text-stone-600"
+              }`}
+            >
+              <span className="block font-black">
+                {locale === "no" ? "QR på skjerm" : "QR on screen"}
+              </span>
+              <span className="mt-0.5 block text-xs opacity-70">
+                {locale === "no" ? "Skann med mobilen" : "Scan with your phone"}
+              </span>
+            </button>
+          </div>
+        </div>
+      )}
       {create.error && <ErrorMessage message={create.error.message} />}
       <button
         type="button"
@@ -203,6 +277,7 @@ function OnceForm() {
           create.mutate({
             purpose: PaymentPurpose[purpose],
             amountKr: Number(amount),
+            flow,
           })
         }
         className="w-full rounded-2xl bg-[#ff5b24] py-3.5 font-black text-white shadow-[0_12px_30px_-14px_rgba(255,91,36,0.8)] transition hover:-translate-y-0.5 disabled:translate-y-0 disabled:opacity-50"
@@ -211,6 +286,155 @@ function OnceForm() {
       </button>
       <SafeNote />
     </div>
+  );
+}
+
+function QrPayment({
+  reference,
+  imageUrl,
+  onClose,
+}: {
+  reference: string;
+  imageUrl: string;
+  onClose: () => void;
+}) {
+  const { locale } = useI18n();
+  const status = api.payment.status.useQuery(
+    { reference },
+    { refetchInterval: 2500, retry: false },
+  );
+  const paid = status.data?.status === "PAID";
+  const ended = ["CANCELLED", "FAILED", "REFUNDED"].includes(
+    status.data?.status ?? "",
+  );
+
+  return (
+    <div className="grid gap-6 sm:grid-cols-[minmax(0,1fr)_220px] sm:items-center">
+      <div>
+        <div
+          className={`inline-flex rounded-full px-3 py-1 text-xs font-black ${
+            paid
+              ? "bg-emerald-100 text-emerald-700"
+              : ended
+                ? "bg-red-100 text-red-700"
+                : "bg-amber-100 text-amber-800"
+          }`}
+        >
+          {paid
+            ? locale === "no"
+              ? "Betaling bekreftet"
+              : "Payment confirmed"
+            : ended
+              ? locale === "no"
+                ? "Betalingen ble ikke fullført"
+                : "Payment was not completed"
+              : locale === "no"
+                ? "Venter på godkjenning i Vipps"
+                : "Waiting for approval in Vipps"}
+        </div>
+        <h3 className="mt-3 text-2xl font-black">
+          {paid
+            ? locale === "no"
+              ? "Takk – Vipps har bekreftet betalingen."
+              : "Thank you – Vipps confirmed the payment."
+            : locale === "no"
+              ? "Skann QR-koden med Vipps"
+              : "Scan the QR code with Vipps"}
+        </h3>
+        <p className="mt-2 text-sm leading-6 text-stone-500">
+          {locale === "no"
+            ? "Statusen hentes direkte fra Vipps. Koden er normalt gyldig i omtrent ti minutter."
+            : "Status is fetched directly from Vipps. The code is normally valid for about ten minutes."}
+        </p>
+        <button
+          type="button"
+          onClick={onClose}
+          className="mt-5 rounded-xl border border-stone-200 px-4 py-2 text-sm font-black text-stone-600"
+        >
+          {paid
+            ? locale === "no"
+              ? "Ferdig"
+              : "Done"
+            : locale === "no"
+              ? "Avbryt og gå tilbake"
+              : "Cancel and go back"}
+        </button>
+      </div>
+      {!paid && !ended && (
+        // Vipps generates and hosts this short-lived QR image. We deliberately
+        // avoid injecting SVG/HTML or placing the token in our own URL.
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={imageUrl}
+          alt={locale === "no" ? "QR-kode for Vipps-betaling" : "Vipps payment QR code"}
+          className="mx-auto aspect-square w-full max-w-[220px] rounded-2xl border border-stone-200 bg-white p-2"
+        />
+      )}
+    </div>
+  );
+}
+
+function ExpressCard({
+  product,
+}: {
+  product: {
+    name: string;
+    description: string;
+    priceOre: number;
+    shippingOre: number;
+    shippingName: string;
+  };
+}) {
+  const { locale } = useI18n();
+  const create = api.payment.createExpress.useMutation({
+    onSuccess: (result) => {
+      window.location.href = result.redirectUrl;
+    },
+  });
+  return (
+    <section className="overflow-hidden rounded-[2rem] border border-indigo-200 bg-indigo-50 p-5 sm:p-7">
+      <div className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
+        <div className="max-w-2xl">
+          <div className="text-xs font-black uppercase tracking-[0.2em] text-indigo-600">
+            Vipps Express
+          </div>
+          <h2 className="mt-2 text-2xl font-black text-indigo-950">
+            {product.name}
+          </h2>
+          <p className="mt-2 text-sm leading-6 text-indigo-800">
+            {product.description}
+          </p>
+          <p className="mt-3 text-xs leading-5 text-indigo-600">
+            {locale === "no"
+              ? `Du deler navn, adresse, e-post og telefon med selgeren i Vipps og velger ${product.shippingName.toLowerCase()} der. Opplysningene brukes til levering.`
+              : `You share name, address, email and phone with the merchant in Vipps and select ${product.shippingName.toLowerCase()} there. The details are used for delivery.`}
+          </p>
+        </div>
+        <div className="shrink-0 sm:text-right">
+          <div className="text-lg font-black text-indigo-950">
+            {product.priceOre / 100} kr
+          </div>
+          <div className="text-xs text-indigo-600">
+            + {product.shippingOre / 100} kr {locale === "no" ? "frakt" : "shipping"}
+          </div>
+          <button
+            type="button"
+            disabled={create.isPending}
+            onClick={() => create.mutate()}
+            className="mt-3 w-full rounded-xl bg-indigo-700 px-5 py-3 text-sm font-black text-white disabled:opacity-50"
+          >
+            {create.isPending
+              ? locale === "no"
+                ? "Åpner Vipps …"
+                : "Opening Vipps …"
+              : locale === "no"
+                ? "Kjøp med Vipps Express"
+                : "Buy with Vipps Express"}
+          </button>
+        </div>
+      </div>
+      {create.error && <div className="mt-4"><ErrorMessage message={create.error.message} /></div>}
+    </section>
   );
 }
 

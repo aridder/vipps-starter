@@ -35,6 +35,27 @@ export default async function LandingPage() {
       href: "https://developer.vippsmobilepay.com/docs/APIs/recurring-api/",
     },
     {
+      name: "Order Management",
+      body: no
+        ? "Rike kvitteringer og ordrelinjer legges direkte i Vipps-aktiviteten for hver engangsbetaling."
+        : "Rich receipts and order lines are added directly to Vipps activity for every one-off payment.",
+      href: "https://developer.vippsmobilepay.com/docs/APIs/order-management-api/",
+    },
+    {
+      name: "QR",
+      body: no
+        ? "Vipps-generert betalings-QR med fysisk kundetilstedeværelse og live, autoritativ statussjekk."
+        : "Vipps-generated payment QR with customer-present semantics and live, authoritative status checks.",
+      href: "https://developer.vippsmobilepay.com/docs/APIs/epayment-api/how-it-works/qr/",
+    },
+    {
+      name: "Report API",
+      body: no
+        ? "Datobasert avstemming av funds og fees i den rollebeskyttede driftssentralen."
+        : "Date-based reconciliation of funds and fees in the role-protected operations console.",
+      href: "https://developer.vippsmobilepay.com/docs/APIs/report-api/",
+    },
+    {
       name: no ? "Signerte webhooks" : "Signed webhooks",
       body: no
         ? "Hendelser valideres med HMAC, mens API-oppslag bekrefter autoritativ status."
@@ -45,43 +66,19 @@ export default async function LandingPage() {
 
   const nextProducts = [
     {
-      priority: no ? "Neste" : "Next",
-      name: "Order Management",
-      body: no
-        ? "Kvittering, ordrelinjer og lenker direkte i Vipps-aktiviteten. Størst umiddelbar gevinst for kundeopplevelsen."
-        : "Receipts, order lines and links directly in Vipps activity. The largest immediate customer-experience gain.",
-      href: "https://developer.vippsmobilepay.com/docs/APIs/order-management-api/",
-    },
-    {
-      priority: no ? "Deretter" : "Then",
-      name: "QR",
-      body: no
-        ? "Dynamisk QR for betaling på skjerm eller fysisk flate – en god demo av Vipps utenfor nettbutikken."
-        : "Dynamic QR payments on screens or physical surfaces – a strong demo beyond web checkout.",
-      href: "https://developer.vippsmobilepay.com/docs/APIs/qr-api/",
-    },
-    {
-      priority: no ? "For nettbutikk" : "For commerce",
+      priority: no ? "Klar til aktivering" : "Ready to activate",
       name: "ePayment Express",
       body: no
-        ? "Adresse, profil og fraktvalg godkjennes i Vipps. Relevant når starteren skal demonstrere en komplett varehandel."
-        : "Address, profile and shipping are approved in Vipps. Relevant when the starter demonstrates complete commerce.",
-      href: "https://developer.vippsmobilepay.com/docs/APIs/epayment-api/how-it-works/express/",
+        ? "Hele flyten er bygget med serverstyrt vare, samtykke, adresse og fast frakt. Slås på først når et ekte produkt og levering er konfigurert."
+        : "The full flow is built with a server-controlled product, consent, address and fixed shipping. It is enabled only after a real product and fulfilment are configured.",
+      href: "https://developer.vippsmobilepay.com/docs/APIs/epayment-api/api-guide/features/express/",
     },
     {
-      priority: no ? "For drift" : "For operations",
-      name: "Report API",
-      body: no
-        ? "Oppgjør, gebyrer og utbetalinger for avstemming. Mest verdi for administrator og økonomi."
-        : "Settlements, fees and payouts for reconciliation. Most valuable for administrators and finance.",
-      href: "https://developer.vippsmobilepay.com/docs/APIs/report-api/",
-    },
-    {
-      priority: no ? "Følg med" : "Watch",
+      priority: no ? "Eksperimentell adapter" : "Experimental adapter",
       name: "Agentic Commerce (UCP)",
       body: no
-        ? "Vipps-betaling i AI- og samtaleflyter. Svært relevant for målgruppen, men dokumentasjonen er fortsatt under utvikling."
-        : "Vipps payments in AI and conversational flows. Highly relevant to the audience, but the documentation is still under development.",
+        ? "En isolert Payment Handler-kontrakt er klar for AI- og samtaleflyter. Ingen produksjonskall før Vipps stabiliserer API-et."
+        : "An isolated Payment Handler contract is ready for AI and conversational flows. No production calls until Vipps stabilizes the API.",
       href: "https://developer.vippsmobilepay.com/docs/APIs/agentic-commerce/",
     },
   ];
@@ -165,7 +162,9 @@ export default async function LandingPage() {
               {no ? "Produktportefølje" : "Product portfolio"}
             </div>
             <h2 className="mt-3 text-3xl font-black tracking-tight sm:text-4xl">
-              {no ? "Det som virker nå – og det vi bør bygge neste." : "What works now – and what to build next."}
+              {no
+                ? "Det som er bygget nå – og det som venter på aktivering."
+                : "What is built now – and what awaits activation."}
             </h2>
           </div>
           <p className="text-sm leading-6 text-stone-600 lg:pb-1">
@@ -186,7 +185,13 @@ export default async function LandingPage() {
             >
               <div className="flex items-center justify-between gap-4">
                 <span className="rounded-full bg-emerald-100 px-2.5 py-1 text-[11px] font-black uppercase tracking-wider text-emerald-700">
-                  {no ? "Live nå" : "Live now"}
+                  {product.name === "Vipps Login"
+                    ? no
+                      ? "Live nå"
+                      : "Live now"
+                    : no
+                      ? "Bygget"
+                      : "Built"}
                 </span>
                 <span className="text-stone-300 transition group-hover:text-stone-600">↗</span>
               </div>

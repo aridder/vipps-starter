@@ -51,6 +51,7 @@ jobs:
       DATABASE_URL_UNPOOLED: postgresql://postgres:postgres@localhost:5432/app
       AUTH_SECRET: ci-e2e-secret
       ENABLE_DEV_LOGIN: "true"
+      ADMIN_EMAILS: test@example.com
       APP_NAME: App Starter
       # Enable the admin billing console so e2e captures a screenshot of it.
       FEATURE_PAYMENT_ADMIN: "true"

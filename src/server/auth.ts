@@ -43,8 +43,8 @@ async function ensureMembership(userId: string, email?: string | null) {
   const existing = await db.membership.findUnique({
     where: { userId_orgId: { userId, orgId: org.id } },
   });
+  const isAdmin = !!email && adminEmails.includes(email.toLowerCase());
   if (!existing) {
-    const isAdmin = !!email && adminEmails.includes(email.toLowerCase());
     const first = (await db.membership.count()) === 0;
     await db.membership.create({
       data: {
@@ -54,7 +54,15 @@ async function ensureMembership(userId: string, email?: string | null) {
           isAdmin || first
             ? [Role.MEMBER, Role.ADMIN, Role.OWNER]
             : [Role.MEMBER],
-      },
+        },
+    });
+  } else if (isAdmin && !existing.roles.includes(Role.ADMIN)) {
+    // ADMIN_EMAILS is authoritative on every login, not only when the
+    // membership is first created. This keeps role-gated UI and procedures in
+    // sync if an existing member is promoted through configuration.
+    await db.membership.update({
+      where: { id: existing.id },
+      data: { roles: [...existing.roles, Role.ADMIN] },
     });
   }
   await db.user.updateMany({

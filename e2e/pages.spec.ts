@@ -12,6 +12,7 @@ test("billing page", async ({ page }) => {
   await expect(
     page.getByRole("heading", { name: "Betalinger og avtaler" }),
   ).toBeVisible();
+  await expect(page.locator('a[aria-current="page"]')).toHaveText("Min side");
   await expect(page.getByText("Vipps-nøkler mangler.")).toBeVisible();
   await expect(page.getByText("Du har ingen aktive avtaler.")).toBeVisible();
   await expect(page.getByText("Ingen betalinger ennå.")).toBeVisible();
@@ -24,6 +25,9 @@ test("billing admin console", async ({ page }) => {
   await expect(
     page.getByRole("heading", { name: "Vipps driftssentral" }),
   ).toBeVisible();
+  await expect(page.locator('a[aria-current="page"]')).toHaveText(
+    "Driftssentral",
+  );
   await expect(page.getByRole("button", { name: "Betalinger" })).toBeVisible();
   await page.getByRole("button", { name: "Avstemming" }).click();
   await expect(

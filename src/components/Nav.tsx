@@ -28,6 +28,14 @@ export function Nav({ userName }: { userName?: string | null }) {
     },
     { href: "/settings", label: t("nav.settings"), show: !!me.data?.isAdmin },
   ];
+  const visibleLinks = links.filter((link) => link.show);
+  const activeHref = visibleLinks
+    .filter(({ href }) =>
+      href === "/"
+        ? pathname === "/"
+        : pathname === href || pathname.startsWith(`${href}/`),
+    )
+    .sort((a, b) => b.href.length - a.href.length)[0]?.href;
 
   return (
     <header className="sticky top-0 z-50 border-b border-stone-200/80 bg-white/90 backdrop-blur-xl">
@@ -39,25 +47,23 @@ export function Nav({ userName }: { userName?: string | null }) {
               {site.data?.name ?? "Vipps Starter"}
             </span>
           </Link>
-          {links
-            .filter((l) => l.show)
-            .map((l) => {
-              const active =
-                l.href === "/" ? pathname === "/" : pathname.startsWith(l.href);
-              return (
-                <Link
-                  key={l.href}
-                  href={l.href}
-                  className={`shrink-0 rounded-xl px-3 py-2 text-sm font-bold transition ${
-                    active
-                      ? "bg-stone-900 text-white"
-                      : "text-stone-600 hover:bg-stone-100"
-                  }`}
-                >
-                  {l.label}
-                </Link>
-              );
-            })}
+          {visibleLinks.map((l) => {
+            const active = l.href === activeHref;
+            return (
+              <Link
+                key={l.href}
+                href={l.href}
+                aria-current={active ? "page" : undefined}
+                className={`shrink-0 rounded-xl px-3 py-2 text-sm font-bold transition ${
+                  active
+                    ? "bg-stone-900 text-white"
+                    : "text-stone-600 hover:bg-stone-100"
+                }`}
+              >
+                {l.label}
+              </Link>
+            );
+          })}
         </nav>
         <div className="flex shrink-0 items-center gap-2">
           <div className="hidden sm:block">

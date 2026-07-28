@@ -15,7 +15,7 @@ function kr(ore: number) {
   return `${(ore / 100).toLocaleString("en-GB")} kr`;
 }
 
-type Tab = "overview" | "payments" | "subscriptions";
+type Tab = "overview" | "payments" | "subscriptions" | "reports";
 
 export default function BillingAdminPage() {
   const [tab, setTab] = useState<Tab>("overview");
@@ -95,8 +95,17 @@ export default function BillingAdminPage() {
         </div>
       </header>
 
-      <div className="grid gap-1 rounded-2xl bg-stone-200 p-1 sm:grid-cols-3">
-        {(["overview", "payments", "subscriptions"] as Tab[]).map((value) => (
+      <div className={`grid gap-1 rounded-2xl bg-stone-200 p-1 ${
+        features.data.reports ? "sm:grid-cols-4" : "sm:grid-cols-3"
+      }`}>
+        {(
+          [
+            "overview",
+            "payments",
+            "subscriptions",
+            ...(features.data.reports ? (["reports"] as const) : []),
+          ] as Tab[]
+        ).map((value) => (
           <button
             type="button"
             key={value}
@@ -106,7 +115,11 @@ export default function BillingAdminPage() {
               tab === value ? "bg-white text-stone-900 shadow-sm" : "text-stone-500"
             }`}
           >
-            {t(`admin.tab.${value}`)}
+            {value === "reports"
+              ? locale === "no"
+                ? "Avstemming"
+                : "Reconciliation"
+              : t(`admin.tab.${value}`)}
           </button>
         ))}
       </div>
@@ -114,6 +127,7 @@ export default function BillingAdminPage() {
       {tab === "overview" && <Overview />}
       {tab === "payments" && <Payments />}
       {tab === "subscriptions" && <Subscriptions />}
+      {tab === "reports" && <ReportReconciliation />}
     </div>
   );
 }
@@ -291,6 +305,7 @@ function Payments() {
                       </span>
                     )}
                 </div>
+                <PaymentVippsDetails reference={p.reference} />
               </div>
             )}
           </div>
@@ -302,6 +317,266 @@ function Payments() {
         </div>
       )}
     </div>
+  );
+}
+
+function PaymentVippsDetails({ reference }: { reference: string }) {
+  const { locale } = useI18n();
+  const details = api.payment.details.useQuery(
+    { reference },
+    { retry: false, staleTime: 30_000 },
+  );
+  if (details.isLoading) {
+    return (
+      <div className="h-16 animate-pulse rounded-xl bg-stone-100" />
+    );
+  }
+  if (details.isError) {
+    return (
+      <p className="rounded-xl bg-amber-50 p-3 text-xs leading-5 text-amber-800">
+        {locale === "no"
+          ? `Kunne ikke hente live-detaljer fra Vipps: ${details.error.message}`
+          : `Could not fetch live details from Vipps: ${details.error.message}`}
+      </p>
+    );
+  }
+  const data = details.data;
+  if (!data) return null;
+  const address = data.shippingDetails?.address;
+  return (
+    <div className="space-y-3 rounded-xl bg-stone-50 p-3">
+      <div className="flex items-center justify-between gap-2">
+        <span className="text-xs font-black uppercase tracking-wider text-stone-400">
+          {locale === "no" ? "Vipps live-detaljer" : "Vipps live details"}
+        </span>
+        <span className="rounded-full bg-white px-2 py-0.5 text-[10px] font-black text-stone-500">
+          {data.state}
+        </span>
+      </div>
+      {(data.shippingDetails || data.userDetails) && (
+        <div className="grid gap-3 text-xs text-stone-600 sm:grid-cols-2">
+          <div>
+            <div className="font-black text-stone-900">
+              {locale === "no" ? "Mottaker" : "Recipient"}
+            </div>
+            <div className="mt-1">
+              {[data.userDetails?.firstName, data.userDetails?.lastName]
+                .filter(Boolean)
+                .join(" ") || "–"}
+            </div>
+            <div>{data.userDetails?.email ?? "–"}</div>
+            <div>{data.userDetails?.mobileNumber ?? "–"}</div>
+          </div>
+          <div>
+            <div className="font-black text-stone-900">
+              {data.shippingDetails?.shippingOptionName ??
+                (locale === "no" ? "Levering" : "Delivery")}
+            </div>
+            <div className="mt-1">
+              {[address?.addressLine1, address?.addressLine2]
+                .filter(Boolean)
+                .join(", ") || "–"}
+            </div>
+            <div>
+              {[address?.postCode, address?.city].filter(Boolean).join(" ")}
+            </div>
+          </div>
+        </div>
+      )}
+      <div>
+        <div className="mb-1 text-xs font-black text-stone-900">
+          {locale === "no" ? "Hendelseslogg" : "Event log"}
+        </div>
+        <div className="space-y-1">
+          {data.events.map((event) => (
+            <div
+              key={`${event.timestamp}-${event.name}`}
+              className="flex items-center justify-between gap-3 rounded-lg bg-white px-2.5 py-2 text-[11px]"
+            >
+              <span className="font-bold">{event.name}</span>
+              <span className="text-stone-400">
+                {event.amount ? kr(event.amount.value) : ""}
+                {event.amount ? " · " : ""}
+                {formatDate(new Date(event.timestamp))}
+              </span>
+            </div>
+          ))}
+          {data.events.length === 0 && (
+            <span className="text-xs text-stone-400">
+              {locale === "no" ? "Ingen hendelser ennå." : "No events yet."}
+            </span>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function localDate() {
+  const now = new Date();
+  const offset = now.getTimezoneOffset() * 60_000;
+  return new Date(now.getTime() - offset).toISOString().slice(0, 10);
+}
+
+function ReportReconciliation() {
+  const { locale } = useI18n();
+  const [date, setDate] = useState(localDate);
+  const report = api.report.overview.useQuery(
+    { date },
+    { retry: false, staleTime: 60_000 },
+  );
+  const data = report.data;
+  return (
+    <div className="space-y-5">
+      <section className="rounded-[2rem] border border-stone-200 bg-white p-5 sm:p-6">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+          <div className="max-w-2xl">
+            <div className="text-xs font-black uppercase tracking-[0.2em] text-indigo-600">
+              Vipps Report API
+            </div>
+            <h2 className="mt-2 text-2xl font-black">
+              {locale === "no" ? "Avstem penger og gebyrer" : "Reconcile funds and fees"}
+            </h2>
+            <p className="mt-2 text-sm leading-6 text-stone-500">
+              {locale === "no"
+                ? "Funds viser pengebevegelsene. Fees viser Vipps-gebyrene. Rapportdata er asynkrone og skal ikke brukes som fasit for statusen til én betaling."
+                : "Funds shows money movements. Fees shows Vipps fees. Report data is asynchronous and must not be used as the source of truth for an individual payment."}
+            </p>
+          </div>
+          <label className="shrink-0 text-xs font-black uppercase tracking-wider text-stone-400">
+            {locale === "no" ? "Ledger-dato" : "Ledger date"}
+            <input
+              type="date"
+              value={date}
+              max={localDate()}
+              onChange={(event) => setDate(event.target.value)}
+              className="mt-2 block rounded-xl border border-stone-200 px-3 py-2 text-sm font-semibold text-stone-900"
+            />
+          </label>
+        </div>
+      </section>
+
+      {report.isLoading ? (
+        <div className="h-40 animate-pulse rounded-[2rem] bg-stone-200" />
+      ) : report.isError ? (
+        <ReportNotice
+          text={
+            locale === "no"
+              ? `Kunne ikke hente rapport: ${report.error.message}`
+              : `Could not fetch report: ${report.error.message}`
+          }
+        />
+      ) : data && !data.available ? (
+        <ReportNotice text={data.reason} />
+      ) : data?.available ? (
+        <>
+          <div className="grid gap-3 sm:grid-cols-3">
+            <Kpi
+              label={locale === "no" ? "Funds netto" : "Funds net"}
+              value={kr(data.fundsNetOre)}
+              accent="text-emerald-700"
+            />
+            <Kpi
+              label={locale === "no" ? "Gebyrer netto" : "Fees net"}
+              value={kr(data.feesNetOre)}
+              accent="text-violet-700"
+            />
+            <Kpi
+              label={locale === "no" ? "Poster" : "Entries"}
+              value={String(data.funds.length + data.fees.length)}
+            />
+          </div>
+          {(data.tryLater || data.truncated) && (
+            <ReportNotice
+              text={
+                data.tryLater
+                  ? locale === "no"
+                    ? "Vipps behandler fortsatt data for denne dagen. Prøv igjen senere."
+                    : "Vipps is still processing this date. Try again later."
+                  : locale === "no"
+                    ? "Dagen har flere enn 200 poster. Bruk full eksport før bokføring."
+                    : "The date has more than 200 entries. Use a full export before posting."
+              }
+            />
+          )}
+          <ReportEntries
+            title={locale === "no" ? "Pengebevegelser" : "Funds"}
+            entries={data.funds}
+            locale={locale}
+          />
+          <ReportEntries
+            title={locale === "no" ? "Gebyrer" : "Fees"}
+            entries={data.fees}
+            locale={locale}
+          />
+        </>
+      ) : null}
+    </div>
+  );
+}
+
+function ReportNotice({ text }: { text: string }) {
+  return (
+    <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm leading-6 text-amber-900">
+      {text}
+    </div>
+  );
+}
+
+function ReportEntries({
+  title,
+  entries,
+  locale,
+}: {
+  title: string;
+  entries: Array<{
+    pspReference?: string;
+    time: string;
+    entryType: string;
+    reference?: string;
+    currency: string;
+    amount: number;
+  }>;
+  locale: "no" | "en";
+}) {
+  return (
+    <section className="overflow-hidden rounded-[2rem] border border-stone-200 bg-white">
+      <div className="flex items-center justify-between border-b border-stone-100 px-5 py-4">
+        <h3 className="font-black">{title}</h3>
+        <span className="rounded-full bg-stone-100 px-2.5 py-1 text-xs font-bold">
+          {entries.length}
+        </span>
+      </div>
+      {entries.length === 0 ? (
+        <p className="p-5 text-sm text-stone-500">
+          {locale === "no" ? "Ingen poster denne dagen." : "No entries for this date."}
+        </p>
+      ) : (
+        <div className="divide-y divide-stone-100">
+          {entries.map((entry, index) => (
+            <div
+              key={`${entry.pspReference ?? entry.reference ?? index}-${entry.time}`}
+              className="grid gap-1 px-5 py-3 text-sm sm:grid-cols-[1fr_auto] sm:items-center"
+            >
+              <div className="min-w-0">
+                <div className="font-bold">{entry.entryType}</div>
+                <div className="truncate text-xs text-stone-400">
+                  {entry.reference ?? entry.pspReference ?? "–"} ·{" "}
+                  {formatDate(new Date(entry.time))}
+                </div>
+              </div>
+              <div
+                className={`font-black ${
+                  entry.amount < 0 ? "text-violet-700" : "text-emerald-700"
+                }`}
+              >
+                {kr(entry.amount)}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </section>
   );
 }
 

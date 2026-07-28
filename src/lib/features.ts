@@ -13,6 +13,10 @@ export type FeatureName =
   | "payments" // Vipps one-off payments
   | "recurring" // Vipps subscriptions (agreements)
   | "paymentAdmin" // admin billing console: refunds, reserve/capture, charge ops
+  | "paymentQr" // in-person one-time payment QR
+  | "paymentExpress" // Express checkout with profile + shipping
+  | "reports" // Report API reconciliation in the admin console
+  | "agenticCommerce" // experimental UCP/Vipps Payment Handler adapter
   | "email" // email notifications
   | "sms" // SMS notifications
   | "push"; // web push notifications
@@ -24,6 +28,10 @@ const DEFAULTS: Record<FeatureName, boolean> = {
   // Off by default: powerful money operations (refund/capture/cancel) stay
   // hidden and unusable until an operator explicitly enables them.
   paymentAdmin: false,
+  paymentQr: true,
+  paymentExpress: false,
+  reports: true,
+  agenticCommerce: false,
   email: false,
   sms: false,
   push: false,
@@ -34,6 +42,10 @@ const ENV_KEYS: Record<FeatureName, string> = {
   payments: "FEATURE_PAYMENTS",
   recurring: "FEATURE_RECURRING",
   paymentAdmin: "FEATURE_PAYMENT_ADMIN",
+  paymentQr: "FEATURE_PAYMENT_QR",
+  paymentExpress: "FEATURE_PAYMENT_EXPRESS",
+  reports: "FEATURE_VIPPS_REPORTS",
+  agenticCommerce: "FEATURE_AGENTIC_COMMERCE",
   email: "FEATURE_EMAIL",
   sms: "FEATURE_SMS",
   push: "FEATURE_PUSH",

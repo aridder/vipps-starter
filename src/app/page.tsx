@@ -3,6 +3,7 @@ import { cookies } from "next/headers";
 import { resolveSite } from "@/lib/site";
 import { resolveLocale, translator } from "@/lib/i18n";
 import { DonateWidget } from "@/components/DonateWidget";
+import { RealPaymentNotice } from "@/components/RealPaymentNotice";
 import { RoleJourney } from "@/components/RoleJourney";
 
 export default async function LandingPage() {
@@ -85,7 +86,10 @@ export default async function LandingPage() {
 
   return (
     <div className="space-y-24 pb-8">
-      <section className="relative overflow-hidden rounded-[2.5rem] bg-stone-950 px-6 py-12 text-white shadow-[0_32px_100px_-48px_rgba(28,25,23,0.8)] sm:px-12 sm:py-16">
+      <div className="space-y-4">
+        <RealPaymentNotice recipientName={site.author.name} />
+
+        <section className="relative overflow-hidden rounded-[2.5rem] bg-stone-950 px-6 py-12 text-white shadow-[0_32px_100px_-48px_rgba(28,25,23,0.8)] sm:px-12 sm:py-16">
         <div className="absolute -right-24 -top-28 h-72 w-72 rounded-full bg-[#ff5b24] opacity-30 blur-3xl" />
         <div className="absolute -bottom-32 left-1/3 h-64 w-64 rounded-full bg-indigo-600 opacity-20 blur-3xl" />
         <div className="relative max-w-3xl">
@@ -151,7 +155,8 @@ export default async function LandingPage() {
             </div>
           ))}
         </div>
-      </section>
+        </section>
+      </div>
 
       <RoleJourney locale={locale} />
 
@@ -223,7 +228,10 @@ export default async function LandingPage() {
       </section>
 
       <div className="grid gap-6 lg:grid-cols-[1.15fr_0.85fr] lg:items-start">
-        <DonateWidget siteName={site.name} />
+        <DonateWidget
+          siteName={site.name}
+          recipientName={site.author.name}
+        />
         <section className="rounded-[2rem] bg-indigo-700 p-6 text-white sm:p-8">
           <div className="text-xs font-black uppercase tracking-[0.2em] text-indigo-200">
             {no ? "Slik er det sikret" : "How it is secured"}

@@ -25,6 +25,7 @@ export default function SubscriptionReceiptPage() {
 
   const a = status.data;
   const active = a?.status === "ACTIVE";
+  const donation = a?.purpose === "DONATION";
   const waiting = !a || a.status === "PENDING";
 
   return (
@@ -38,7 +39,16 @@ export default function SubscriptionReceiptPage() {
       ) : active ? (
         <>
           <div className="text-5xl">🎉</div>
-          <h1 className="text-xl font-bold">{t("subreceipt.active")}</h1>
+          <h1 className="text-xl font-bold">
+            {t(
+              donation ? "subreceipt.donationThanks" : "subreceipt.active",
+            )}
+          </h1>
+          {donation && (
+            <p className="mx-auto max-w-lg text-sm leading-6 text-stone-600">
+              {t("subreceipt.donationConfirmed")}
+            </p>
+          )}
           <p className="text-sm text-stone-600">
             {t("subreceipt.activeLine", {
               desc: a.description,

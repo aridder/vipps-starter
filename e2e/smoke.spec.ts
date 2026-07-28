@@ -5,6 +5,12 @@ test.beforeAll(() => ensureShotsDir());
 
 test("landing page renders", async ({ page }) => {
   await page.goto("/");
+  await expect(page.getByTestId("real-payment-notice")).toContainText(
+    "Ekte betalingsflyt – ingen kan trekkes akkurat nå",
+  );
+  await expect(page.getByTestId("real-payment-notice")).toContainText(
+    "Alle donasjoner mottas med stor takk",
+  );
   await expect(
     page.getByRole("heading", {
       level: 1,

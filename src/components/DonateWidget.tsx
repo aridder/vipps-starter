@@ -6,7 +6,13 @@ import { AgreementInterval } from "@prisma/client";
 import { api } from "@/trpc/react";
 import { useI18n } from "@/components/I18nProvider";
 
-export function DonateWidget({ siteName }: { siteName: string }) {
+export function DonateWidget({
+  siteName,
+  recipientName,
+}: {
+  siteName: string;
+  recipientName: string;
+}) {
   const { locale, t } = useI18n();
   const available = api.payment.available.useQuery();
   const features = api.meta.features.useQuery();
@@ -14,6 +20,7 @@ export function DonateWidget({ siteName }: { siteName: string }) {
   const [mode, setMode] = useState<"once" | "recurring">("once");
   const [amount, setAmount] = useState("100");
   const [interval, setInterval] = useState<AgreementInterval>("MONTH");
+  const [acknowledged, setAcknowledged] = useState(false);
 
   const once = api.payment.create.useMutation({
     onSuccess: (result) => (window.location.href = result.redirectUrl),
@@ -28,13 +35,22 @@ export function DonateWidget({ siteName }: { siteName: string }) {
   const presets = [50, 100, 250, 500];
   const per = interval === "YEAR" ? t("per.yr") : t("per.mo");
   const isLoading = available.isLoading || features.isLoading;
+  const amountKr = Number(amount);
+  const validAmount =
+    Number.isInteger(amountKr) && amountKr >= 1 && amountKr <= 100000;
 
   return (
     <section id="donate" className="scroll-mt-24">
       <div className="overflow-hidden rounded-[2rem] border border-stone-200 bg-white shadow-[0_20px_60px_-36px_rgba(28,25,23,0.45)]">
         <div className="border-b border-stone-100 p-6 sm:p-8">
           <div className="mb-3 inline-flex rounded-full bg-[#ff5b24]/10 px-3 py-1 text-[11px] font-black uppercase tracking-wider text-[#d93f0b]">
-            {locale === "no" ? "Live kundedemo" : "Live customer demo"}
+            {on
+              ? locale === "no"
+                ? "Ekte produksjonsbetaling"
+                : "Real production payment"
+              : locale === "no"
+                ? "Klar for produksjonsbetaling"
+                : "Ready for production payments"}
           </div>
           <h2 className="text-2xl font-black">{t("donate.title")}</h2>
           <p className="mt-2 max-w-xl text-sm leading-6 text-stone-500">
@@ -56,10 +72,19 @@ export function DonateWidget({ siteName }: { siteName: string }) {
             <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm leading-6 text-amber-900">
               <div className="font-bold">
                 {locale === "no"
-                  ? "Betalingsdemoen er midlertidig utilgjengelig"
-                  : "The payment demo is temporarily unavailable"}
+                  ? "Ekte betaling er ikke aktivert ennå"
+                  : "Real payments are not active yet"}
               </div>
-              <p className="mt-1 text-amber-800">{t("donate.notConfigured")}</p>
+              <p className="mt-1 text-amber-800">
+                {locale === "no"
+                  ? "Ingen penger kan trekkes akkurat nå. Donasjonsknappen aktiveres så snart det separate Vipps-nøkkelsettet har ePayment-tilgang."
+                  : "No money can be charged right now. The donation button activates as soon as the dedicated Vipps key set has ePayment access."}
+              </p>
+              {available.data?.reason && (
+                <p className="mt-2 text-xs text-amber-700">
+                  {available.data.reason}
+                </p>
+              )}
             </div>
           ) : (
             <>
@@ -73,7 +98,10 @@ export function DonateWidget({ siteName }: { siteName: string }) {
                         ? "Betal én gang – ingen innlogging kreves"
                         : "Pay once – no sign-in required"
                     }
-                    onClick={() => setMode("once")}
+                    onClick={() => {
+                      setMode("once");
+                      setAcknowledged(false);
+                    }}
                   />
                   <ModeButton
                     active={mode === "recurring"}
@@ -83,7 +111,10 @@ export function DonateWidget({ siteName }: { siteName: string }) {
                         ? "En avtale du kan stoppe når som helst"
                         : "An agreement you can stop at any time"
                     }
-                    onClick={() => setMode("recurring")}
+                    onClick={() => {
+                      setMode("recurring");
+                      setAcknowledged(false);
+                    }}
                   />
                 </div>
               )}
@@ -99,7 +130,10 @@ export function DonateWidget({ siteName }: { siteName: string }) {
                         type="button"
                         key={value}
                         aria-pressed={interval === value}
-                        onClick={() => setInterval(value)}
+                        onClick={() => {
+                          setInterval(value);
+                          setAcknowledged(false);
+                        }}
                         className={`flex-1 rounded-xl py-2.5 text-sm font-bold transition ${
                           interval === value
                             ? "bg-indigo-600 text-white shadow-sm"
@@ -128,7 +162,10 @@ export function DonateWidget({ siteName }: { siteName: string }) {
                       type="button"
                       key={value}
                       aria-pressed={amount === String(value)}
-                      onClick={() => setAmount(String(value))}
+                      onClick={() => {
+                        setAmount(String(value));
+                        setAcknowledged(false);
+                      }}
                       className={`rounded-xl py-2.5 text-sm font-bold transition ${
                         amount === String(value)
                           ? "bg-[#ff5b24] text-white shadow-sm"
@@ -151,8 +188,13 @@ export function DonateWidget({ siteName }: { siteName: string }) {
                   }
                   type="number"
                   min={1}
+                  max={100000}
+                  step={1}
                   value={amount}
-                  onChange={(event) => setAmount(event.target.value)}
+                  onChange={(event) => {
+                    setAmount(event.target.value);
+                    setAcknowledged(false);
+                  }}
                   className="w-full rounded-xl border border-stone-200 px-3 py-3 pr-12 font-semibold outline-none transition focus:border-[#ff5b24] focus:ring-4 focus:ring-[#ff5b24]/10"
                 />
                 <span className="pointer-events-none absolute right-4 top-3 text-sm font-bold text-stone-400">
@@ -169,11 +211,38 @@ export function DonateWidget({ siteName }: { siteName: string }) {
                 </p>
               )}
 
+              <div className="mt-4 rounded-2xl border border-[#ff5b24]/25 bg-[#fff4ef] p-4 text-sm text-stone-800">
+                <div className="font-black text-[#c93808]">
+                  {locale === "no"
+                    ? "Dette er en ekte donasjon"
+                    : "This is a real donation"}
+                </div>
+                <p className="mt-1 leading-6">
+                  {locale === "no"
+                    ? `${amount || "0"} kr${mode === "recurring" && recurringOn ? ` ${per}` : ""} trekkes i Vipps og går til ${recipientName}. Du kjøper ingen vare eller tjeneste.`
+                    : `${amount || "0"} kr${mode === "recurring" && recurringOn ? ` ${per}` : ""} is charged in Vipps and goes to ${recipientName}. You are not purchasing goods or services.`}
+                </p>
+                <label className="mt-3 flex cursor-pointer items-start gap-2 font-bold">
+                  <input
+                    type="checkbox"
+                    checked={acknowledged}
+                    onChange={(event) => setAcknowledged(event.target.checked)}
+                    className="mt-0.5 h-4 w-4 rounded border-stone-300 accent-[#ff5b24]"
+                  />
+                  <span>
+                    {locale === "no"
+                      ? "Jeg forstår at dette er ekte penger og ønsker å donere."
+                      : "I understand this is real money and want to donate."}
+                  </span>
+                </label>
+              </div>
+
               {mode === "recurring" && recurringOn && !loggedIn ? (
                 <button
                   type="button"
+                  disabled={!acknowledged}
                   onClick={() => signIn("vipps", { callbackUrl: "/" })}
-                  className="mt-4 w-full rounded-2xl bg-[#ff5b24] py-3.5 font-black text-white shadow-[0_12px_30px_-14px_rgba(255,91,36,0.8)] transition hover:-translate-y-0.5"
+                  className="mt-4 w-full rounded-2xl bg-[#ff5b24] py-3.5 font-black text-white shadow-[0_12px_30px_-14px_rgba(255,91,36,0.8)] transition hover:-translate-y-0.5 disabled:translate-y-0 disabled:opacity-50"
                 >
                   {t("donate.signInRecurring")}
                 </button>
@@ -181,18 +250,22 @@ export function DonateWidget({ siteName }: { siteName: string }) {
                 <button
                   type="button"
                   disabled={
-                    once.isPending || recurring.isPending || Number(amount) < 1
+                    !acknowledged ||
+                    once.isPending ||
+                    recurring.isPending ||
+                    !validAmount
                   }
                   onClick={() =>
                     mode === "recurring" && recurringOn
                       ? recurring.mutate({
                           purpose: "DONATION",
-                          amountKr: Number(amount),
+                          amountKr,
                           interval,
                         })
                       : once.mutate({
                           purpose: "DONATION",
-                          amountKr: Number(amount),
+                          amountKr,
+                          description: `Støtte til ${siteName}`,
                         })
                   }
                   className="mt-4 w-full rounded-2xl bg-[#ff5b24] py-3.5 font-black text-white shadow-[0_12px_30px_-14px_rgba(255,91,36,0.8)] transition hover:-translate-y-0.5 disabled:translate-y-0 disabled:opacity-50"
@@ -209,6 +282,45 @@ export function DonateWidget({ siteName }: { siteName: string }) {
                 <Step number="1" text={locale === "no" ? "Du velger beløp" : "You choose an amount"} />
                 <Step number="2" text={locale === "no" ? "Vipps åpnes trygt" : "Vipps opens securely"} />
                 <Step number="3" text={locale === "no" ? "Status bekreftes her" : "Status is confirmed here"} />
+              </div>
+              <div className="mt-4 rounded-2xl bg-stone-950 p-4 text-sm text-stone-200">
+                <div className="font-black text-white">
+                  {locale === "no"
+                    ? "Dette beviser betalingen i praksis"
+                    : "What this payment proves in practice"}
+                </div>
+                <ul className="mt-2 grid gap-1.5 text-xs leading-5 sm:grid-cols-2">
+                  {(mode === "recurring" && recurringOn
+                    ? locale === "no"
+                      ? [
+                          "Vipps Login og kundesamtykke",
+                          "Ekte Recurring-avtale og første trekk",
+                          "Autoritativ status og signert webhook",
+                          "Avtalen kan sees og stoppes på Min side",
+                        ]
+                      : [
+                          "Vipps Login and customer consent",
+                          "Real Recurring agreement and first charge",
+                          "Authoritative status and signed webhook",
+                          "The agreement can be viewed and stopped on My page",
+                        ]
+                    : locale === "no"
+                      ? [
+                          "Ekte ePayment og godkjenning i Vipps",
+                          "Automatisk trekk og Vipps-kvittering",
+                          "Autoritativ status og signert webhook",
+                          "Betaling og oppgjør i Driftssentral",
+                        ]
+                      : [
+                          "Real ePayment and Vipps approval",
+                          "Automatic capture and Vipps receipt",
+                          "Authoritative status and signed webhook",
+                          "Payment and settlement in Operations",
+                        ]
+                  ).map((item) => (
+                    <li key={item}>✓ {item}</li>
+                  ))}
+                </ul>
               </div>
               <p className="mt-3 text-[11px] leading-5 text-stone-400">
                 {locale === "no"

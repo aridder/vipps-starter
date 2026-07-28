@@ -27,6 +27,7 @@ export default function ReceiptPage() {
 
   const p = status.data;
   const done = p?.status === "PAID";
+  const donation = p?.purpose === "DONATION";
   const waiting = !p || p.status === "CREATED" || p.status === "AUTHORIZED";
 
   return (
@@ -40,7 +41,14 @@ export default function ReceiptPage() {
       ) : done ? (
         <>
           <div className="text-5xl">✅</div>
-          <h1 className="text-xl font-bold">{t("receipt.thanks")}</h1>
+          <h1 className="text-xl font-bold">
+            {t(donation ? "receipt.donationThanks" : "receipt.thanks")}
+          </h1>
+          {donation && (
+            <p className="mx-auto max-w-lg text-sm leading-6 text-stone-600">
+              {t("receipt.donationConfirmed")}
+            </p>
+          )}
           <p className="text-sm text-stone-600">
             {t("receipt.paidLine", {
               desc: p.description,

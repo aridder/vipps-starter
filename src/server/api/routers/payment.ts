@@ -30,6 +30,7 @@ import {
   hashAnalyticsId,
   trackProductEvent,
 } from "@/lib/server-telemetry";
+import { resolveSite } from "@/lib/site";
 
 // Load an org-scoped payment + its MSN, or throw. Used by admin actions.
 async function loadPaymentForAdmin(
@@ -107,7 +108,7 @@ export const paymentRouter = createTRPCRouter({
 
       const labels: Record<string, string> = {
         ONE_TIME: "Payment",
-        DONATION: "Donation",
+        DONATION: `Støtte til ${resolveSite().name}`.slice(0, 100),
       };
       const description = input.description || labels[input.purpose] || "Payment";
       const reference = `pay-${crypto.randomUUID()}`;

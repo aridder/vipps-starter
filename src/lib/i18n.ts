@@ -80,6 +80,9 @@ const no: Dict = {
   "receipt.checking": "Sjekker betaling …",
   "receipt.confirming": "Vi bekrefter med Vipps.",
   "receipt.thanks": "Takk!",
+  "receipt.donationThanks": "Tusen takk for donasjonen! 💜",
+  "receipt.donationConfirmed":
+    "Vipps har bekreftet betalingen. Alle donasjoner mottas med stor takknemlighet og bidrar til videre utvikling.",
   "receipt.paidLine": "{desc} — {amount} kr.",
   "receipt.notCompleted": "Betalingen ble ikke fullført",
   "receipt.notFound": "Fant ikke betalingen.",
@@ -89,6 +92,9 @@ const no: Dict = {
   "subreceipt.awaiting": "Venter på godkjenning …",
   "subreceipt.approve": "Godkjenn avtalen i Vipps-appen.",
   "subreceipt.active": "Avtalen er aktiv!",
+  "subreceipt.donationThanks": "Tusen takk for den faste støtten! 💜",
+  "subreceipt.donationConfirmed":
+    "Vipps har bekreftet avtalen. Du kan når som helst se eller stoppe den på Min side.",
   "subreceipt.activeLine": "{desc} — {amount} kr {per}.",
   "subreceipt.notCreated": "Avtalen ble ikke opprettet",
   "subreceipt.notFound": "Fant ikke avtalen.",
@@ -259,6 +265,9 @@ const en: Dict = {
   "receipt.checking": "Checking payment …",
   "receipt.confirming": "Confirming with Vipps.",
   "receipt.thanks": "Thanks!",
+  "receipt.donationThanks": "Thank you so much for the donation! 💜",
+  "receipt.donationConfirmed":
+    "Vipps has confirmed the payment. Every donation is deeply appreciated and supports continued development.",
   "receipt.paidLine": "{desc} — {amount} kr.",
   "receipt.notCompleted": "Payment not completed",
   "receipt.notFound": "Payment not found.",
@@ -268,6 +277,9 @@ const en: Dict = {
   "subreceipt.awaiting": "Awaiting approval …",
   "subreceipt.approve": "Approve the subscription in the Vipps app.",
   "subreceipt.active": "Subscription active!",
+  "subreceipt.donationThanks": "Thank you for the recurring support! 💜",
+  "subreceipt.donationConfirmed":
+    "Vipps has confirmed the agreement. You can view or stop it on My page at any time.",
   "subreceipt.activeLine": "{desc} — {amount} kr {per}.",
   "subreceipt.notCreated": "Subscription not created",
   "subreceipt.notFound": "Not found.",

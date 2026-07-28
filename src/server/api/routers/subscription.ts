@@ -20,6 +20,7 @@ import {
   hashAnalyticsId,
   trackProductEvent,
 } from "@/lib/server-telemetry";
+import { resolveSite } from "@/lib/site";
 
 // Load an org-scoped agreement + a charge + the MSN, for admin charge actions.
 async function loadChargeForAdmin(
@@ -101,11 +102,12 @@ export const subscriptionRouter = createTRPCRouter({
         });
       }
 
+      const siteName = resolveSite().name;
       const labels: Record<string, string> = {
         SUBSCRIPTION: "Subscription",
-        DONATION: "Recurring donation",
+        DONATION: `Fast støtte til ${siteName}`.slice(0, 100),
       };
-      const intervalWord = input.interval === "YEAR" ? "yearly" : "monthly";
+      const intervalWord = input.interval === "YEAR" ? "årlig" : "månedlig";
       const productName = labels[input.purpose] ?? "Subscription";
       const description = `${productName} (${intervalWord})`;
       const amountOre = input.amountKr * 100;

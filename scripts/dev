@@ -1,0 +1,59 @@
+#!/usr/bin/env bash
+# Stable entry point for humans and agents. It selects the repository's Node
+# runtime before invoking npm, so the caller's global Node version is irrelevant.
+set -euo pipefail
+cd "$(dirname "$0")/.."
+
+usage() {
+  cat <<'EOF'
+usage: ./scripts/dev <setup|doctor|check|verify|test|integration|e2e|ui|dev|build|lint|typecheck> [args...]
+
+Examples:
+  ./scripts/dev setup
+  ./scripts/dev test -- src/lib/example.test.ts
+  ./scripts/dev integration
+  ./scripts/dev verify
+EOF
+}
+
+action="${1:-}"
+if [ -z "$action" ] || [ "$action" = "--help" ] || [ "$action" = "-h" ]; then
+  usage
+  [ -n "$action" ] && exit 0
+  exit 2
+fi
+shift
+direct_command=()
+
+case "$action" in
+  setup) direct_command=(scripts/setup-local.sh) ;;
+  integration) direct_command=(scripts/run-integration-tests.sh) ;;
+  e2e) script="test:e2e" ;;
+  ui) script="review:ui" ;;
+  doctor)
+    exec scripts/with-node-22.sh bash -c '
+      printf "node=%s\n" "$(node --version)"
+      printf "npm=%s\n" "$(npm --version)"
+      if docker compose version >/dev/null 2>&1; then
+        printf "docker-compose=ready\n"
+      else
+        printf "docker-compose=unavailable\n"
+      fi
+    '
+    ;;
+  check|verify|test|dev|build|lint|typecheck) script="$action" ;;
+  *)
+    echo "Unknown development action: $action" >&2
+    usage >&2
+    exit 2
+    ;;
+esac
+
+[ "${1:-}" = "--" ] && shift
+if [ "${#direct_command[@]}" -gt 0 ]; then
+  exec scripts/with-node-22.sh "${direct_command[@]}" "$@"
+fi
+if [ "$#" -gt 0 ]; then
+  exec scripts/with-node-22.sh npm run "$script" -- "$@"
+fi
+exec scripts/with-node-22.sh npm run "$script"

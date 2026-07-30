@@ -1,25 +1,23 @@
-# Local Postgres for development and e2e.
-#   docker compose up -d db
-# Then set in .env:
-#   DATABASE_URL=postgresql://postgres:postgres@localhost:5432/app
-#   DATABASE_URL_UNPOOLED=postgresql://postgres:postgres@localhost:5432/app
+name: vipps-starter-local
+
+# Warm repository-owned PostgreSQL for development and e2e.
 services:
   db:
-    image: postgres:16
+    image: postgres:16-alpine
     restart: unless-stopped
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
+      POSTGRES_USER: app
+      POSTGRES_PASSWORD: app
       POSTGRES_DB: app
     ports:
-      - "5432:5432"
+      - "127.0.0.1::5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
-      interval: 5s
-      timeout: 5s
-      retries: 10
+      test: ["CMD-SHELL", "pg_isready -U app -d app"]
+      interval: 1s
+      timeout: 3s
+      retries: 30
 
 volumes:
   pgdata:

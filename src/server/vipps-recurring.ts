@@ -7,7 +7,7 @@
 //
 // Deler nøkler, MSN-oppslag og access-token med ePayment-modulen (vipps.ts).
 
-import { BASE, baseHeaders, getAccessToken } from "@/server/vipps";
+import { BASE, baseHeaders, getAccessToken, idempotencyKey } from "@/server/vipps";
 import type { AgreementInterval } from "@prisma/client";
 
 // Vipps krever DIRECT_CAPTURE (trekkes på forfall) eller RESERVE_CAPTURE.
@@ -47,6 +47,13 @@ export async function createAgreement(params: {
   description: string;
   merchantRedirectUrl: string;
   merchantAgreementUrl: string;
+  /**
+   * Our own durable id for this agreement, used as the idempotency key.
+   *
+   * Without it a retry creates a SECOND agreement, and the member is charged
+   * twice every period for the rest of the subscription.
+   */
+  operationId: string;
 }): Promise<{ agreementId: string; vippsConfirmationUrl: string; chargeId?: string }> {
   const token = await getAccessToken();
   const res = await fetch(`${BASE}/recurring/v3/agreements`, {
@@ -55,7 +62,7 @@ export async function createAgreement(params: {
       ...baseHeaders(params.msn),
       Authorization: `Bearer ${token}`,
       "Content-Type": "application/json",
-      "Idempotency-Key": crypto.randomUUID(),
+      "Idempotency-Key": idempotencyKey("agreement", params.operationId),
     },
     body: JSON.stringify({
       pricing: {
@@ -121,7 +128,8 @@ export async function stopAgreement(
       ...baseHeaders(msn),
       Authorization: `Bearer ${token}`,
       "Content-Type": "application/json",
-      "Idempotency-Key": crypto.randomUUID(),
+      // One stop per agreement, so the agreement id identifies it.
+      "Idempotency-Key": idempotencyKey("stop", agreementId),
     },
     body: JSON.stringify({ status: "STOPPED" }),
   });
@@ -201,6 +209,7 @@ async function modifyCharge(
   agreementId: string,
   chargeId: string,
   action: "capture" | "refund" | "cancel",
+  operationId: string,
   amountOre?: number,
 ): Promise<void> {
   const token = await getAccessToken();
@@ -215,7 +224,9 @@ async function modifyCharge(
       ...baseHeaders(msn),
       Authorization: `Bearer ${token}`,
       "Content-Type": "application/json",
-      "Idempotency-Key": crypto.randomUUID(),
+      // Same rule as for ePayment: a retry must carry the key of the attempt
+      // it repeats, or Vipps treats it as a second charge modification.
+      "Idempotency-Key": idempotencyKey(action, operationId),
     },
     body:
       amountOre !== undefined
@@ -236,7 +247,7 @@ export function captureCharge(
   chargeId: string,
   amountOre: number,
 ) {
-  return modifyCharge(msn, agreementId, chargeId, "capture", amountOre);
+  return modifyCharge(msn, agreementId, chargeId, "capture", chargeId, amountOre);
 }
 
 // Refund a captured charge (partial or full).
@@ -246,7 +257,7 @@ export function refundCharge(
   chargeId: string,
   amountOre: number,
 ) {
-  return modifyCharge(msn, agreementId, chargeId, "refund", amountOre);
+  return modifyCharge(msn, agreementId, chargeId, "refund", chargeId, amountOre);
 }
 
 // Cancel a charge that has not been captured yet.
@@ -255,7 +266,7 @@ export function cancelCharge(
   agreementId: string,
   chargeId: string,
 ) {
-  return modifyCharge(msn, agreementId, chargeId, "cancel");
+  return modifyCharge(msn, agreementId, chargeId, "cancel", chargeId);
 }
 
 // Neste forfallsdato ut fra intervall

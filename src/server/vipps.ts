@@ -223,7 +223,10 @@ export async function createPayment(params: {
       ...baseHeaders(params.msn),
       Authorization: `Bearer ${token}`,
       "Content-Type": "application/json",
-      "Idempotency-Key": crypto.randomUUID(),
+      // The reference already identifies exactly one payment, so it is the
+      // natural idempotency key: a retry returns the same payment instead of
+      // being rejected as a duplicate.
+      "Idempotency-Key": params.reference,
     },
     body: JSON.stringify({
       amount: { currency: "NOK", value: params.amountOre },
@@ -333,11 +336,39 @@ export async function getPaymentEvents(
   return (await res.json()) as VippsPaymentEvent[];
 }
 
-// Shared helper for capture/refund/cancel modification calls.
+/**
+ * The key Vipps deduplicates on.
+ *
+ * Kept under the 50-character limit without losing what distinguishes two
+ * operations from each other.
+ */
+export function idempotencyKey(action: string, operationId: string): string {
+  return `${action}-${operationId}`.slice(0, 50);
+}
+
+/**
+ * Shared helper for capture/refund/cancel modification calls.
+ *
+ * `operationId` is required, and that is the whole point.
+ *
+ * Vipps requires a retry to carry the SAME idempotency key as the attempt it
+ * repeats — "the capture request in an idempotent retry must be identical to
+ * the previous request(s)". With a fresh UUID per call a retry is not a retry
+ * to Vipps but a new operation: if the connection drops after Vipps processed
+ * the refund but before the response reached us, the merchant pays out twice.
+ *
+ * So the key has to come from something durable that describes ONE operation
+ * — an order id, a payment reference plus the amount already settled — never
+ * `crypto.randomUUID()`. Making it a required parameter means the mistake
+ * cannot be reintroduced by accident: there is no default to fall back on.
+ *
+ * @see https://developer.vippsmobilepay.com/docs/APIs/epayment-api/api-guide/errors/
+ */
 async function modifyPayment(
   msn: string,
   reference: string,
   action: "capture" | "refund" | "cancel",
+  operationId: string,
   amountOre?: number,
 ): Promise<void> {
   const token = await getAccessToken();
@@ -349,14 +380,18 @@ async function modifyPayment(
         ...baseHeaders(msn),
         Authorization: `Bearer ${token}`,
         "Content-Type": "application/json",
-        "Idempotency-Key": crypto.randomUUID(),
+        // The action is part of the key: capturing and refunding the same
+        // amount on the same payment are two different operations and must
+        // not be able to collide.
+        "Idempotency-Key": idempotencyKey(action, operationId),
       },
+      // Cancel releases the whole reservation and carries no amount.
       body:
-        amountOre !== undefined
-          ? JSON.stringify({
+        amountOre === undefined
+          ? undefined
+          : JSON.stringify({
               modificationAmount: { currency: "NOK", value: amountOre },
-            })
-          : undefined,
+            }),
     },
   );
   if (!res.ok) {
@@ -365,16 +400,30 @@ async function modifyPayment(
 }
 
 // Capture an authorized (reserved) amount.
-export function capturePayment(msn: string, reference: string, amountOre: number) {
-  return modifyPayment(msn, reference, "capture", amountOre);
+export function capturePayment(
+  msn: string,
+  reference: string,
+  amountOre: number,
+  operationId: string,
+) {
+  return modifyPayment(msn, reference, "capture", operationId, amountOre);
 }
 
 // Refund a captured amount (partial or full).
-export function refundPayment(msn: string, reference: string, amountOre: number) {
-  return modifyPayment(msn, reference, "refund", amountOre);
+export function refundPayment(
+  msn: string,
+  reference: string,
+  amountOre: number,
+  operationId: string,
+) {
+  return modifyPayment(msn, reference, "refund", operationId, amountOre);
 }
 
 // Cancel releases a reservation that has not been captured.
-export function cancelPayment(msn: string, reference: string) {
-  return modifyPayment(msn, reference, "cancel");
+export function cancelPayment(
+  msn: string,
+  reference: string,
+  operationId: string,
+) {
+  return modifyPayment(msn, reference, "cancel", operationId);
 }

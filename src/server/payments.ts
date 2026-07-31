@@ -60,7 +60,10 @@ export async function syncPaymentStatus(db: PrismaClient, reference: string) {
 
     if (info.state === "AUTHORIZED") {
       if (payment.autoCapture && capturedOre < amountOre) {
-        await capturePayment(msn, reference, amountOre - capturedOre);
+        // One auto-capture per payment, so the reference identifies the
+        // operation. Without a stable key a webhook arriving at the same
+        // moment as the receipt page would capture twice.
+        await capturePayment(msn, reference, amountOre - capturedOre, reference);
         capturedOre = amountOre;
       }
       if (capturedOre > 0) {

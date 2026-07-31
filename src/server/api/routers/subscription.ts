@@ -124,6 +124,9 @@ export const subscriptionRouter = createTRPCRouter({
           description,
           merchantRedirectUrl: `${baseUrl(ctx.headers)}/billing/subscription/receipt?id=${agreementId}`,
           merchantAgreementUrl: `${baseUrl(ctx.headers)}/billing`,
+          // Our own id for the agreement, so a retry cannot create a second
+          // one that charges the member twice every period.
+          operationId: agreementId,
         });
       } catch (e) {
         throw new TRPCError({

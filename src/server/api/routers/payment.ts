@@ -342,15 +342,43 @@ export const paymentRouter = createTRPCRouter({
     }),
 
   // ── Admin actions (capture / refund / cancel) ─────────────────────────
+  //
+  // All three sync with Vipps BEFORE deciding how much to move. Our own
+  // captured/refunded numbers can be stale — a refund made in the Vipps
+  // portal never passed through this app — and acting on stale numbers means
+  // asking to give back more than is left.
+  //
+  // The idempotency key is derived from how much has already been settled.
+  // An automatic retry sees the same numbers and therefore sends the same
+  // key, so Vipps recognises it as a repeat instead of paying out twice.
   capture: paymentAdminProcedure
     .input(
       z.object({ reference: z.string(), amountKr: z.number().int().min(1).optional() }),
     )
     .mutation(async ({ ctx, input }) => {
-      const { payment, msn } = await loadPaymentForAdmin(ctx, input.reference);
+      const { msn } = await loadPaymentForAdmin(ctx, input.reference);
+      const payment = await syncPaymentStatus(ctx.db, input.reference);
+      if (!payment) throw new TRPCError({ code: "NOT_FOUND" });
       const remaining = payment.amountOre - payment.capturedOre;
+      if (remaining <= 0) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "This payment is already captured in full.",
+        });
+      }
       const amount = input.amountKr ? input.amountKr * 100 : remaining;
-      await capturePayment(msn, input.reference, amount);
+      if (amount > remaining) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: `At most ${remaining / 100} kr is left to capture.`,
+        });
+      }
+      await capturePayment(
+        msn,
+        input.reference,
+        amount,
+        `${input.reference}-${payment.capturedOre}`,
+      );
       return syncPaymentStatus(ctx.db, input.reference);
     }),
 
@@ -359,10 +387,31 @@ export const paymentRouter = createTRPCRouter({
       z.object({ reference: z.string(), amountKr: z.number().int().min(1).optional() }),
     )
     .mutation(async ({ ctx, input }) => {
-      const { payment, msn } = await loadPaymentForAdmin(ctx, input.reference);
+      const { msn } = await loadPaymentForAdmin(ctx, input.reference);
+      const payment = await syncPaymentStatus(ctx.db, input.reference);
+      if (!payment) throw new TRPCError({ code: "NOT_FOUND" });
       const refundable = payment.capturedOre - payment.refundedOre;
+      // Refusing here rather than letting Vipps reject it: an opaque API
+      // error is a bad way to learn that the money is already back.
+      if (refundable <= 0) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "There is nothing left to refund on this payment.",
+        });
+      }
       const amount = input.amountKr ? input.amountKr * 100 : refundable;
-      await refundPayment(msn, input.reference, amount);
+      if (amount > refundable) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: `At most ${refundable / 100} kr can be refunded.`,
+        });
+      }
+      await refundPayment(
+        msn,
+        input.reference,
+        amount,
+        `${input.reference}-${payment.refundedOre}`,
+      );
       return syncPaymentStatus(ctx.db, input.reference);
     }),
 
@@ -370,7 +419,9 @@ export const paymentRouter = createTRPCRouter({
     .input(z.object({ reference: z.string() }))
     .mutation(async ({ ctx, input }) => {
       const { msn } = await loadPaymentForAdmin(ctx, input.reference);
-      await cancelPayment(msn, input.reference);
+      // Cancel releases a reservation, so there is exactly one of them per
+      // payment: the reference alone identifies the operation.
+      await cancelPayment(msn, input.reference, input.reference);
       return syncPaymentStatus(ctx.db, input.reference);
     }),
 });

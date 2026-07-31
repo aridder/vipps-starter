@@ -1,0 +1,35 @@
+name: Claude review
+
+# Kaller den delte reviewen i app-plattform. Kadens, prompt og modell
+# vedlikeholdes DER — ikke dupliser dem hit; to kopier begynner å drive fra
+# hverandre med en gang.
+#
+# Krever `CLAUDE_CODE_OAUTH_TOKEN` som repository secret i DETTE repoet.
+# Personlig konto har ingen org-secrets å arve fra, så den må settes her.
+on:
+  pull_request:
+    types: [opened, ready_for_review]
+  issue_comment:
+    types: [created]
+
+concurrency:
+  group: claude-review-${{ github.event.issue.number || github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  review:
+    uses: aridder/app-plattform/.github/workflows/claude-review-reusable.yml@main
+    secrets: inherit
+    with:
+      extra_prompt: |
+        Dette repoet er en MAL nye apper genereres fra, og den håndterer
+        betaling via Vipps. To konsekvenser:
+
+        - En feil i oppsettet kopieres inn i hver avledede app og oppdages
+          først i en annen kodebase. Si eksplisitt fra når en endring
+          forplanter seg.
+        - Betalingsflyten er pengelogikk: se særlig etter manglende
+          idempotens ved retry, beløp og valuta som kan avvike mellom
+          forespørsel og bekreftelse, callback-/webhook-håndtering uten
+          verifisering av avsender, og tilstander der en betaling kan bli
+          registrert to ganger eller ikke i det hele tatt. Slikt er P1.

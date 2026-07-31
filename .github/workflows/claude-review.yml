@@ -18,6 +18,14 @@ concurrency:
 
 jobs:
   review:
+    # MÅ stå her, ikke i den gjenbrukbare workflowen. En kalt workflow kan
+    # bare få rettigheter kalleren allerede har — og repoets standard er
+    # `read`. Uten dette avviser GitHub kallet med `startup_failure` før
+    # jobben starter, uten logg og uten at det vises som sjekk på PR-en.
+    permissions:
+      contents: read
+      pull-requests: write
+      id-token: write
     uses: aridder/app-plattform/.github/workflows/claude-review-reusable.yml@main
     secrets: inherit
     with:

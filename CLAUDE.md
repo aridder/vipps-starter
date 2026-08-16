@@ -4,6 +4,51 @@ This is the canonical repository guide for humans, Codex, and Claude Code.
 Read it before changing behavior. `AGENTS.md` is intentionally only a pointer
 to this file.
 
+## Developer experience
+
+A pragmatic and extremely efficient developer experience is one of this
+repository's top priorities, ranked with security and data policy rather than
+below them. Feedback latency decides how much correct work gets shipped per
+hour, by a human and by an agent, so treat the loop as a product surface:
+
+- One command from a clean checkout: `./scripts/dev setup`. It is idempotent
+  and safe to repeat on a warm machine.
+- One entry point: `./scripts/dev`. Never add a second setup path, a competing
+  README recipe, or a manual step a script could do.
+- The normal loop stays fast: a targeted test in seconds, `./scripts/dev check`
+  as the whole-repository loop. `verify`, integration, and e2e run last, never
+  in the inner loop.
+- The normal loop runs offline: no cloud sign-in, no production secret, no
+  hand-provisioned service.
+- `./scripts/dev doctor` answers which runtime and services are active.
+- Failures state what to run next. An error message that ends the conversation
+  is a defect.
+- Friction is a bug. When setup, a gate, or a message wastes your time, fix it
+  in the same pull request while it is small and open an issue when it is not.
+  Leave the loop faster than you found it.
+
+Run `./scripts/dev friction` before you start a feature. Every `./scripts/dev`
+run records its action, exit status, and duration in `.cache/devex/loop.jsonl`
+(local, never committed), and the report reads that window plus this
+repository's own profiles. It answers two questions:
+
+- **Which signals do I have?** A feature that touches the database in an app
+  with no integration profile, or the UI in an app with no visual profile, has
+  no proof except somebody clicking. The report says so before you write the
+  code, not in review.
+- **Where is the loop slow or flaky?** Median, tail, and failure rate per
+  action against a declared budget. Over budget or failing a third of the time
+  is a finding, and findings are issues — the `Friksjon i utviklingsløkken`
+  template exists for exactly this.
+
+Budgets live in `scripts/devex-report.mjs` and can be overridden per repository
+with `devex.budgets` in `package.json`. Change a budget in the open when you
+disagree with it; do not quietly live over it.
+
+Slowing the normal loop, or making it depend on something a new contributor
+cannot get in one command, needs the same justification as weakening a security
+control.
+
 ## Development contract
 
 Use Node 22. A clean checkout becomes runnable with:

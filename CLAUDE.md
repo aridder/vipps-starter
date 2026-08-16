@@ -49,6 +49,10 @@ Slowing the normal loop, or making it depend on something a new contributor
 cannot get in one command, needs the same justification as weakening a security
 control.
 
+> This repository keeps its own `./scripts/dev`, which the platform does not
+> replace. It has no `friction` action, so run the report directly with
+> `node scripts/devex-report.mjs` until somebody adds one.
+
 ## Development contract
 
 Use Node 22. A clean checkout becomes runnable with:

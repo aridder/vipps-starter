@@ -32,3 +32,6 @@ npm-debug.log*
 /playwright-report/
 /playwright/.cache/
 /screenshots/
+
+# Local developer-loop log, written by ./scripts/dev
+.cache

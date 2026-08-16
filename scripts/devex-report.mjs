@@ -133,9 +133,36 @@ export function evaluateSignals({ packageJson = {}, has }) {
   ];
 }
 
+/**
+ * Actions whose failure means the harness broke, rather than that the gate did
+ * its job.
+ *
+ * `check` going red is the normal shape of development: you write the failing
+ * test, then you make it pass. Counting those as unreliability told exactly the
+ * person this contract is written for that their working gate cannot be
+ * trusted. The exit code alone cannot tell "your code is wrong" from "the tool
+ * is broken", so only the actions that are not gates are read that way.
+ * `build` is a gate too - it fails on your own type errors - so it is not here.
+ */
+export const HARNESS_ACTIONS = new Set(["setup", "doctor"]);
+
+/**
+ * Actions you keep running while you work.
+ *
+ * A dev server's duration is how long you had it open, and its exit status is
+ * how you stopped it. Neither says anything about this repository's loop, so
+ * the measured heuristics skip them entirely. They stay in the log and in the
+ * table, because "how often do I restart the dev server" is worth seeing.
+ */
+export const LONG_LIVED_ACTIONS = new Set(["dev"]);
+
+/** The true median: the average of the middle two when the count is even. */
 function median(values) {
   const sorted = [...values].sort((a, b) => a - b);
-  return sorted[Math.floor((sorted.length - 1) / 2)];
+  const middle = sorted.length / 2;
+  return sorted.length % 2 === 1
+    ? sorted[Math.floor(middle)]
+    : Math.round((sorted[middle - 1] + sorted[middle]) / 2);
 }
 
 /** One row per action: how often, how slow, how often it failed. */
@@ -172,6 +199,8 @@ export function deriveFindings({
     });
   }
   for (const entry of measured) {
+    if (LONG_LIVED_ACTIONS.has(entry.action)) continue;
+
     if (entry.budget !== undefined && entry.median > entry.budget) {
       findings.push({
         kind: "over-budget",
@@ -179,11 +208,15 @@ export function deriveFindings({
         message: `\`${entry.action}\` takes ${formatSeconds(entry.median)} at the median, over its ${formatSeconds(entry.budget)} budget. Every feature pays this on every iteration.`,
       });
     }
-    if (entry.runs >= 3 && entry.failures / entry.runs >= 1 / 3) {
+    if (
+      HARNESS_ACTIONS.has(entry.action) &&
+      entry.runs >= 3 &&
+      entry.failures / entry.runs >= 1 / 3
+    ) {
       findings.push({
         kind: "unreliable",
         subject: entry.action,
-        message: `\`${entry.action}\` failed ${entry.failures} of ${entry.runs} runs. A gate you cannot trust gets rerun, then ignored.`,
+        message: `\`${entry.action}\` failed ${entry.failures} of ${entry.runs} runs. This one is not supposed to fail: it is the harness, not a gate.`,
       });
     }
     // A tail far above the median is usually a cold cache or a service that was

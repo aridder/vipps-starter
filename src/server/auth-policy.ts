@@ -10,6 +10,27 @@ export function isVippsProduction(apiBase: string): boolean {
   }
 }
 
+const TEST_ISSUER = "https://apitest.vipps.no/access-management-1.0/access/";
+const PRODUCTION_ISSUER = "https://api.vipps.no/access-management-1.0/access/";
+
+/**
+ * Which Vipps Login issuer to trust when VIPPS_ISSUER is not set.
+ *
+ * Derived from the payment API base rather than hardcoded, so the two can't
+ * disagree: an instance talking to the test API signing users in against
+ * production was the old default, and it defaulted the *safe* half (payments)
+ * to test while defaulting the sensitive half to production. Deriving it also
+ * means live deployments — which must set VIPPS_API_BASE to reach real money —
+ * keep the production issuer without changing anything.
+ */
+export function resolveVippsIssuer(env: {
+  vippsIssuer?: string;
+  vippsApiBase: string;
+}): string {
+  if (env.vippsIssuer) return env.vippsIssuer;
+  return isVippsProduction(env.vippsApiBase) ? PRODUCTION_ISSUER : TEST_ISSUER;
+}
+
 /**
  * Dev login authenticates on an unverified email alone, and ADMIN_EMAILS then
  * grants ADMIN to whoever types that address. An admin can repoint the

@@ -24,6 +24,7 @@ import {
   getExpressProduct,
 } from "@/server/vipps-express";
 import { syncPaymentStatus } from "@/server/payments";
+import { createRateLimiter } from "@/server/rate-limit";
 import { TRPCError as _TRPCError } from "@trpc/server";
 import { PaymentPurpose } from "@prisma/client";
 import {
@@ -70,6 +71,13 @@ const ONE_OFF_PURPOSE = z.enum([
   PaymentPurpose.DONATION,
 ]);
 
+// Lower than the analytics ceiling on purpose: a person makes a handful of
+// payment attempts a minute at most, and each one reaches Vipps.
+const isRateLimited = createRateLimiter({
+  perSourcePerMinute: 10,
+  perInstancePerMinute: 100,
+});
+
 export const paymentRouter = createTRPCRouter({
   create: publicProcedure
     .input(
@@ -83,6 +91,15 @@ export const paymentRouter = createTRPCRouter({
       }),
     )
     .mutation(async ({ ctx, input }) => {
+      // Anyone can start a donation without logging in — that is the point —
+      // so this is the one open door that reaches the merchant's real MSN.
+      // Without a limit a single caller can open unbounded Vipps payments.
+      if (isRateLimited(ctx.headers)) {
+        throw new TRPCError({
+          code: "TOO_MANY_REQUESTS",
+          message: "Too many payment attempts. Try again in a minute.",
+        });
+      }
       if (!vippsConfigured()) {
         throw new TRPCError({
           code: "PRECONDITION_FAILED",
@@ -251,7 +268,18 @@ export const paymentRouter = createTRPCRouter({
     .query(async ({ ctx, input }) => {
       const payment = await syncPaymentStatus(ctx.db, input.reference);
       if (!payment) throw new TRPCError({ code: "NOT_FOUND" });
-      return payment;
+      // Deliberately public: a donation can be paid without logging in, and the
+      // reference in the receipt URL is the only thing tying the payer to it.
+      // So return what a receipt needs and nothing that identifies the account
+      // behind it — the reference travels in referrers, history and shared
+      // screenshots, and `userId`/`orgId` have no business going with it.
+      return {
+        reference: payment.reference,
+        status: payment.status,
+        purpose: payment.purpose,
+        description: payment.description,
+        amountOre: payment.amountOre,
+      };
     }),
 
   available: publicProcedure.query(async ({ ctx }) => {

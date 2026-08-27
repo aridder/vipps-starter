@@ -23,12 +23,13 @@ concurrency:
 
 jobs:
   review:
-    # Repoet er offentlig: hvem som helst kan kommentere på en PR. Den delte
-    # workflowen sjekker bare at kommentaren ikke er fra en bot og inneholder
-    # `@claude` — kombinert med `secrets: inherit` og `pull-requests: write`
-    # under ville en fremmed dermed kunne trigge en review av sin egen kode
-    # med dette repoets Claude-token. Kadensen for øvrig (draft, dependabot,
-    # `@claude`) styres fortsatt der.
+    # Bevisst duplikat av sjekken i den delte workflowen (app-plattform#218).
+    # Den hører hjemme begge steder: `secrets: inherit` og
+    # `pull-requests: write` under gir kjøringen dette repoets Claude-token,
+    # og på `issue_comment` sjekkes PR-hodet ut — kode forfatteren selv
+    # kontrollerer. Dette er repoet som er offentlig, så det skal ikke miste
+    # beskyttelsen om den delte fila endres. Kadensen for øvrig (draft,
+    # dependabot, `@claude`) styres fortsatt der.
     if: >-
       (github.event_name == 'pull_request' &&
        contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'),

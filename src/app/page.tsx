@@ -274,18 +274,6 @@ export default async function LandingPage() {
         </div>
       </section>
 
-      <footer className="flex flex-col gap-2 border-t border-stone-200 pt-6 text-xs text-stone-400 sm:flex-row sm:items-center sm:justify-between">
-        <span>© {site.author.name}</span>
-        <span>
-          <a href={site.githubUrl} target="_blank" rel="noreferrer" className="underline">
-            GitHub
-          </a>{" "}
-          ·{" "}
-          <a href={site.author.url} target="_blank" rel="noreferrer" className="underline">
-            LinkedIn
-          </a>
-        </span>
-      </footer>
     </div>
   );
 }

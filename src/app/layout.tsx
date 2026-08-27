@@ -5,6 +5,7 @@ import { TRPCReactProvider } from "@/trpc/react";
 import { ProductAnalytics } from "@/components/ProductAnalytics";
 import { I18nProvider } from "@/components/I18nProvider";
 import { Nav } from "@/components/Nav";
+import { Footer } from "@/components/Footer";
 import { auth } from "@/server/auth";
 import { resolveSite } from "@/lib/site";
 import { resolveLocale } from "@/lib/i18n";
@@ -41,6 +42,7 @@ export default async function RootLayout({
             <main className="mx-auto max-w-6xl px-4 py-8 sm:px-6 sm:py-12">
               {children}
             </main>
+            <Footer site={resolveSite()} locale={locale} />
           </I18nProvider>
         </TRPCReactProvider>
       </body>

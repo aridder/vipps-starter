@@ -23,6 +23,19 @@ concurrency:
 
 jobs:
   review:
+    # Repoet er offentlig: hvem som helst kan kommentere på en PR. Den delte
+    # workflowen sjekker bare at kommentaren ikke er fra en bot og inneholder
+    # `@claude` — kombinert med `secrets: inherit` og `pull-requests: write`
+    # under ville en fremmed dermed kunne trigge en review av sin egen kode
+    # med dette repoets Claude-token. Kadensen for øvrig (draft, dependabot,
+    # `@claude`) styres fortsatt der.
+    if: >-
+      (github.event_name == 'pull_request' &&
+       contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'),
+                github.event.pull_request.author_association)) ||
+      (github.event_name == 'issue_comment' &&
+       contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'),
+                github.event.comment.author_association))
     # MÅ stå her, ikke i den gjenbrukbare workflowen. En kalt workflow kan
     # bare få rettigheter kalleren allerede har — og repoets standard er
     # `read`. Uten dette avviser GitHub kallet med `startup_failure` før

@@ -21,6 +21,11 @@ npm-debug.log*
 .env.*
 !.env.example
 
+# claude code — personal, per-machine settings. Hooks are deliberately not
+# checked in: a shared SessionStart hook runs whatever `scripts/setup.sh` says
+# on the branch you have checked out, including a contributor's pull request.
+.claude/settings.local.json
+
 # vercel
 .vercel
 

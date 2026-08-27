@@ -10,6 +10,14 @@ export type SiteConfig = {
   author: { name: string; tagline: string; url: string; email: string };
 };
 
+// Shown as "last updated" on /vilkar and /personvern. Bump when the legal
+// text changes materially — section 7 on both pages promises this date is
+// accurate.
+export const legalUpdated = {
+  no: "27. august 2026",
+  en: "27 August 2026",
+} as const;
+
 const env = (key: string, fallback: string) => {
   const v = process.env[key];
   return v && v.trim() !== "" ? v : fallback;

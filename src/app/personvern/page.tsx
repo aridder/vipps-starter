@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { cookies } from "next/headers";
-import { resolveSite } from "@/lib/site";
+import { legalUpdated, resolveSite } from "@/lib/site";
 import { resolveLocale } from "@/lib/i18n";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -14,7 +14,7 @@ export default async function PrivacyPage() {
   const cookieStore = await cookies();
   const locale = resolveLocale(cookieStore.get("NEXT_LOCALE")?.value);
   const no = locale === "no";
-  const updated = no ? "27. august 2026" : "27 August 2026";
+  const updated = legalUpdated[locale];
 
   const sections: Array<{ title: string; body: React.ReactNode }> = [
     {
@@ -54,14 +54,14 @@ export default async function PrivacyPage() {
     {
       title: no ? "4. Informasjonskapsler og analyse" : "4. Cookies and analytics",
       body: no
-        ? "Vi bruker kun nødvendige informasjonskapsler: en sesjonskapsel som holder deg innlogget og en kapsel (NEXT_LOCALE) som husker språkvalget ditt. Vi samler anonym bruksstatistikk (sidevisninger og ytelse) med tilfeldige identifikatorer i din egen nettleser; statistikken lagres hos oss og deles ikke med annonse- eller sporingstjenester."
-        : "We only use necessary cookies: a session cookie that keeps you signed in and a cookie (NEXT_LOCALE) that remembers your language choice. We collect anonymous usage statistics (page views and performance) using random identifiers kept in your own browser; the statistics are stored by us and are not shared with advertising or tracking services.",
+        ? "Vi bruker kun nødvendige informasjonskapsler — blant annet kapsler som holder deg innlogget og sikrer selve innloggingen, og en kapsel (NEXT_LOCALE) som husker språkvalget ditt. Vi samler anonym bruksstatistikk (sidevisninger og ytelse) med tilfeldige identifikatorer i din egen nettleser; statistikken deles ikke med annonse- eller sporingstjenester."
+        : "We only use necessary cookies — including cookies that keep you signed in and secure the sign-in itself, and a cookie (NEXT_LOCALE) that remembers your language choice. We collect anonymous usage statistics (page views and performance) using random identifiers kept in your own browser; the statistics are not shared with advertising or tracking services.",
     },
     {
       title: no ? "5. Deling og lagring" : "5. Sharing and storage",
       body: no
-        ? "Opplysningene deles ikke med andre enn Vipps MobilePay (for å gjennomføre betalinger) og vår driftsleverandør som lagrer databasen. Vi selger aldri personopplysninger. Opplysningene lagres så lenge du har en konto eller så lenge bokføringsregler krever det, og slettes deretter."
-        : "Data is not shared with anyone except Vipps MobilePay (to process payments) and our hosting provider that stores the database. We never sell personal data. Data is kept for as long as you have an account or as long as bookkeeping rules require, and is then deleted.",
+        ? "Opplysningene deles ikke med andre enn Vipps MobilePay (for å gjennomføre betalinger) og våre leverandører av drift, logging og statistikk, som lagrer databasen og teknisk telemetri på våre vegne. Vi selger aldri personopplysninger. Opplysningene lagres så lenge du har en konto eller så lenge bokføringsregler krever det, og slettes deretter."
+        : "Data is not shared with anyone except Vipps MobilePay (to process payments) and our providers of hosting, logging and statistics, which store the database and technical telemetry on our behalf. We never sell personal data. Data is kept for as long as you have an account or as long as bookkeeping rules require, and is then deleted.",
     },
     {
       title: no ? "6. Dine rettigheter" : "6. Your rights",

@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { cookies } from "next/headers";
-import { resolveSite } from "@/lib/site";
+import { legalUpdated, resolveSite } from "@/lib/site";
 import { resolveLocale } from "@/lib/i18n";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -14,7 +14,7 @@ export default async function TermsPage() {
   const cookieStore = await cookies();
   const locale = resolveLocale(cookieStore.get("NEXT_LOCALE")?.value);
   const no = locale === "no";
-  const updated = no ? "27. august 2026" : "27 August 2026";
+  const updated = legalUpdated[locale];
 
   const sections: Array<{ title: string; body: React.ReactNode }> = [
     {

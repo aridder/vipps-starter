@@ -191,6 +191,14 @@ export const paymentRouter = createTRPCRouter({
     }),
 
   createExpress: publicProcedure.mutation(async ({ ctx }) => {
+    // The second unauthenticated path to the merchant's real MSN — it shares
+    // the limiter with `create` so the pair has one budget, not two.
+    if (isRateLimited(ctx.headers)) {
+      throw new TRPCError({
+        code: "TOO_MANY_REQUESTS",
+        message: "Too many payment attempts. Try again in a minute.",
+      });
+    }
     if (!isEnabled("paymentExpress")) {
       throw new TRPCError({ code: "NOT_FOUND" });
     }

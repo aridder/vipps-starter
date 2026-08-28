@@ -25,6 +25,11 @@ are intended uses.
 - [Vipps integration guide](https://github.com/aridder/vipps-starter/blob/main/docs/VIPPS.md):
   the authoritative walkthrough of every Vipps API used here, with the
   reasoning behind each choice.
+- [Vipps Recurring uten omvei](https://github.com/aridder/vipps-starter/blob/main/src/app/artikler/vipps-recurring-uten-omvei/page.tsx):
+  article on the four patterns that separate a subscription integration that
+  holds up from one that double-charges — the agreement/charge/payment model,
+  idempotency keys, authoritative status, and why AUTHORIZED does not mean
+  "not captured".
 - [Repository guide (CLAUDE.md)](https://github.com/aridder/vipps-starter/blob/main/CLAUDE.md):
   architecture map, conventions and guardrails. Read this before changing code.
 

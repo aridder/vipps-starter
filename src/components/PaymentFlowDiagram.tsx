@@ -178,19 +178,22 @@ export function PaymentFlowDiagram({ locale }: { locale: "no" | "en" }) {
             <strong className="font-black text-stone-900">
               Den grå pilen er ikke bevis.
             </strong>{" "}
-            En webhook-kropp og en redirect kan begge forfalskes, så begge
-            brukes kun som et signal om å gå og spørre Vipps. Den grønne pilen
-            er det eneste stedet appen henter sannheten om at penger faktisk har
-            flyttet seg.
+            Webhooken er signert, men den leveres minst én gang, uten
+            rekkefølgegaranti, og av og til ikke i det hele tatt. Redirecten
+            styres av brukeren. Begge er signaler om å gå og spørre Vipps. Den
+            grønne pilen er det eneste stedet appen henter sannheten om at
+            penger faktisk har flyttet seg.
           </>
         ) : (
           <>
             <strong className="font-black text-stone-900">
               The grey arrow is not proof.
             </strong>{" "}
-            A webhook body and a redirect can both be forged, so both are used
-            only as a signal to go and ask Vipps. The green arrow is the one
-            place the app learns that money actually moved.
+            The webhook is signed, but it is delivered at least once, with no
+            ordering guarantee, and occasionally not at all. The redirect is
+            controlled by the user. Both are signals to go and ask Vipps. The
+            green arrow is the one place the app learns that money actually
+            moved.
           </>
         )}
       </figcaption>

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { db } from "@/server/db";
 import { processDueCharges } from "@/server/agreements";
+import { matchesBearer } from "@/server/secret-compare";
 
 // Daily Vercel Cron. Creates Vipps charges for active subscriptions due soon and
 // syncs outstanding charges to PAID. See cron config in vercel.json.
@@ -15,7 +16,7 @@ export async function GET(request: Request): Promise<NextResponse> {
   if (!secret) {
     return NextResponse.json({ error: "CRON_SECRET not set" }, { status: 500 });
   }
-  if (request.headers.get("authorization") !== `Bearer ${secret}`) {
+  if (!matchesBearer(request.headers.get("authorization"), secret)) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
 

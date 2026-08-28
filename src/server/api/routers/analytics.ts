@@ -5,6 +5,7 @@ import {
   hashAnalyticsId,
   trackProductEvent,
 } from "@/lib/server-telemetry";
+import { createRateLimiter } from "@/server/rate-limit";
 
 const clientEventName = z.enum([
   "app.session_started",
@@ -33,30 +34,10 @@ const properties = z.record(z.string(), propertyValue).superRefine((value, ctx) 
   }
 });
 
-const maxEventsPerSourcePerMinute = 60;
-const maxEventsPerInstancePerMinute = 600;
-let rateLimitWindowStartedAt = Date.now();
-let instanceEventCount = 0;
-const sourceEventCounts = new Map<string, number>();
-
-function isRateLimited(headers: Headers) {
-  const now = Date.now();
-  if (now - rateLimitWindowStartedAt >= 60_000) {
-    rateLimitWindowStartedAt = now;
-    instanceEventCount = 0;
-    sourceEventCounts.clear();
-  }
-
-  const source =
-    headers.get("x-forwarded-for")?.split(",")[0]?.trim().slice(0, 64) ??
-    "unknown";
-  const count = (sourceEventCounts.get(source) ?? 0) + 1;
-  sourceEventCounts.set(source, count);
-  if (count > maxEventsPerSourcePerMinute) return true;
-
-  instanceEventCount += 1;
-  return instanceEventCount > maxEventsPerInstancePerMinute;
-}
+const isRateLimited = createRateLimiter({
+  perSourcePerMinute: 60,
+  perInstancePerMinute: 600,
+});
 
 export const analyticsRouter = createTRPCRouter({
   enabled: publicProcedure.query(() => ({ enabled: analyticsEnabled() })),

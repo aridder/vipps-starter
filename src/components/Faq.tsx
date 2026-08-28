@@ -159,7 +159,7 @@ const ITEMS: Item[] = [
           <strong>Pengene går aldri via plattformen</strong> — hver bedrift er
           selv Vipps-kunde med eget organisasjonsnummer og eget oppgjør.{" "}
           <em>
-            «Super-merchant» er ikke Vipps' eget begrep; det er lånt vokabular
+            «Super-merchant» er ikke Vipps’ eget begrep; det er lånt vokabular
             fra andre betalingsplattformer.
           </em>
         </>
@@ -175,7 +175,7 @@ const ITEMS: Item[] = [
           business is a Vipps customer in its own right, with its own
           organisation number and settlement.{" "}
           <em>
-            “Super-merchant” is not Vipps' own term; it is vocabulary borrowed
+            “Super-merchant” is not Vipps’ own term; it is vocabulary borrowed
             from other payment platforms.
           </em>
         </>
@@ -209,7 +209,7 @@ const ITEMS: Item[] = [
           capture it — the state does not tell you whether you captured.
           Treating “AUTHORIZED” as “not captured yet” means capturing twice.
           And reservations you will not capture must be cancelled before the
-          deadline, or the customer's money stays needlessly held.
+          deadline, or the customer’s money stays needlessly held.
         </>
       ),
     },

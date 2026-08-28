@@ -9,6 +9,7 @@ import { Footer } from "@/components/Footer";
 import { auth } from "@/server/auth";
 import { resolveSite } from "@/lib/site";
 import { resolveLocale } from "@/lib/i18n";
+import { resolveFeatures } from "@/lib/features";
 
 export const dynamic = "force-dynamic";
 
@@ -61,6 +62,7 @@ export default async function RootLayout({
   const session = await auth();
   const cookieStore = await cookies();
   const locale = resolveLocale(cookieStore.get("NEXT_LOCALE")?.value);
+  const features = resolveFeatures();
 
   return (
     <html lang={locale}>
@@ -68,7 +70,13 @@ export default async function RootLayout({
         <TRPCReactProvider>
           <I18nProvider locale={locale}>
             <ProductAnalytics />
-            <Nav userName={session?.user?.name} />
+            <Nav
+              userName={session?.user?.name}
+              features={{
+                payments: features.payments,
+                paymentAdmin: features.paymentAdmin,
+              }}
+            />
             <main className="mx-auto max-w-6xl px-4 py-8 sm:px-6 sm:py-12">
               {children}
             </main>

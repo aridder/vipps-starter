@@ -175,13 +175,17 @@ export function DonateWidget({
               )}
 
               <div className="mt-5">
-                <label
-                  htmlFor="donation-amount"
+                <div
+                  id="donation-amount-label"
                   className="mb-2 block text-xs font-bold uppercase tracking-wider text-stone-400"
                 >
                   {locale === "no" ? "Velg beløp" : "Choose amount"}
-                </label>
-                <div className="grid grid-cols-4 gap-2">
+                </div>
+                <div
+                  role="group"
+                  aria-labelledby="donation-amount-label"
+                  className="grid grid-cols-4 gap-2"
+                >
                   {presets.map((value) => (
                     <button
                       type="button"

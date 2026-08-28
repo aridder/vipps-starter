@@ -14,7 +14,37 @@ export const dynamic = "force-dynamic";
 
 export async function generateMetadata(): Promise<Metadata> {
   const site = resolveSite();
-  return { title: site.name, description: site.tagline };
+  // Shared in Slack, X and agent crawlers as often as it is visited directly,
+  // so the card matters as much as the page.
+  return {
+    title: site.name,
+    description: site.tagline,
+    applicationName: site.name,
+    keywords: [
+      "Vipps",
+      "Vipps MobilePay",
+      "betaling",
+      "betalingsløsning",
+      "abonnement",
+      "faste trekk",
+      "super merchant",
+      "partner",
+      "ePayment",
+      "recurring payments",
+      "Vipps Login",
+      "webhooks",
+      "Next.js",
+      "TypeScript",
+    ],
+    authors: [{ name: site.author.name, url: site.author.url }],
+    openGraph: {
+      type: "website",
+      siteName: site.name,
+      title: site.name,
+      description: site.tagline,
+    },
+    twitter: { card: "summary_large_image", title: site.name, description: site.tagline },
+  };
 }
 
 export const viewport: Viewport = {

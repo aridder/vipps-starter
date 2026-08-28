@@ -164,7 +164,6 @@ export function DonateWidget({
                       aria-pressed={amount === String(value)}
                       onClick={() => {
                         setAmount(String(value));
-                        setAcknowledged(false);
                       }}
                       className={`rounded-xl py-2.5 text-sm font-bold transition ${
                         amount === String(value)
@@ -193,7 +192,6 @@ export function DonateWidget({
                   value={amount}
                   onChange={(event) => {
                     setAmount(event.target.value);
-                    setAcknowledged(false);
                   }}
                   className="w-full rounded-xl border border-stone-200 px-3 py-3 pr-12 font-semibold outline-none transition focus:border-[#ff5b24] focus:ring-4 focus:ring-[#ff5b24]/10"
                 />

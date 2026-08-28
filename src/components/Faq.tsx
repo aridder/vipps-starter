@@ -222,20 +222,18 @@ const ITEMS: Item[] = [
     a: {
       no: (
         <>
-          Ja, hvis selskapet ditt har under 100 ansatte og under 1 million
-          dollar i omsetning — det er vilkårene i PolyForm Small Business
-          1.0.0. Større selskaper trenger en kommersiell lisens; ta kontakt.
-          Behold <code className="font-mono">Required Notice</code>-linjen i
-          LICENSE når du videredistribuerer.
+          Ja, uten forbehold. Koden er MIT-lisensiert: bruk den til hva du
+          vil, også kommersielt, uten å spørre først. Behold
+          copyright-linjen i <code className="font-mono">LICENSE</code>, så
+          har du oppfylt hele forpliktelsen.
         </>
       ),
       en: (
         <>
-          Yes, if your company has fewer than 100 people and under $1M in
-          revenue — those are the PolyForm Small Business 1.0.0 terms. Larger
-          companies need a commercial licence; get in touch. Keep the{" "}
-          <code className="font-mono">Required Notice</code> line in LICENSE
-          when you redistribute.
+          Yes, with no strings. The code is MIT licensed: use it for
+          anything, commercially included, without asking first. Keep the
+          copyright line in <code className="font-mono">LICENSE</code> and you
+          have met the whole obligation.
         </>
       ),
     },

@@ -108,16 +108,21 @@ on pull requests. See [`docs/AGENT_WORKFLOW.md`](docs/AGENT_WORKFLOW.md).
 
 ## License
 
-Source-available under the
-**[PolyForm Small Business License 1.0.0](LICENSE)**:
+**[MIT](LICENSE).** Use it for anything, commercially included, without asking.
+Fork it, ship it, sell what you build with it. Keep the copyright line and you
+have met the whole obligation.
 
-- ✅ Free if your company has **fewer than 100 people** and **under $1M** revenue.
-- 💼 Larger companies need a commercial license — contact the maintainer.
-- 📌 Keep the `Required Notice:` line in `LICENSE` when you redistribute.
+It was previously source-available under PolyForm Small Business; it was
+relicensed to MIT because the point of this repository is that people actually
+use it.
 
 ## Support and hire
 
-Built and maintained by one independent developer. If this saved you time,
-there is a Vipps button on the landing page — and it is the very integration
-you just evaluated. For help with Vipps, payments or Next.js, the landing page
-links to services and contact.
+Built and maintained by one independent developer.
+
+- **Need help with Vipps, payments or Next.js?** I take on work — contact
+  details are on the landing page.
+- **Saved you a day?** The landing page has a Vipps donation button, and it is
+  the very integration you just evaluated. Entirely optional.
+- **Found a bug in the payment logic?** Open an issue. Money bugs are the ones
+  worth reporting.

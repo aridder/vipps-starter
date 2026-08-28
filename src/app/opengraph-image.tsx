@@ -84,7 +84,7 @@ export default async function OpengraphImage() {
             {site.githubUrl.replace(/^https:\/\//, "")}
           </div>
           <div style={{ color: "#57534e", fontSize: "24px" }}>
-            PolyForm Small Business
+            MIT-lisensiert
           </div>
         </div>
       </div>

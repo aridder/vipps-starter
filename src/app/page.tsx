@@ -137,7 +137,7 @@ export default async function LandingPage() {
     codeRepository: site.githubUrl,
     programmingLanguage: ["TypeScript", "SQL"],
     runtimePlatform: "Next.js",
-    license: "https://polyformproject.org/licenses/small-business/1.0.0",
+    license: "https://opensource.org/licenses/MIT",
     author: { "@type": "Person", name: site.author.name, url: site.author.url },
     keywords:
       "Vipps, Vipps MobilePay, betaling, abonnement, faste trekk, super merchant, partner, ePayment, recurring, Vipps Login, webhooks",
@@ -387,7 +387,7 @@ export default async function LandingPage() {
             {t("license.body", { name: site.name })}
           </p>
           <a
-            href="https://polyformproject.org/licenses/small-business/1.0.0"
+            href="https://opensource.org/licenses/MIT"
             target="_blank"
             rel="noreferrer"
             className="mt-4 inline-block font-bold text-white underline decoration-stone-600 underline-offset-4"

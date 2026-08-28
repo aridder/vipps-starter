@@ -5,7 +5,7 @@
 > Vipps Login, signed webhooks, refunds, settlement reconciliation and the
 > partner model, where every customer keeps their own sales unit (MSN) and
 > settlement. Every flow below is real code that runs, not a sketch.
-> Source-available under PolyForm Small Business 1.0.0.
+> MIT licensed — use it for anything, commercially included.
 >
 > Norwegian keywords: vipps, betaling, betalingsløsning, abonnement, faste
 > trekk, tilbakebetaling/refusjon, super merchant (borrowed term; Vipps says partner + sales unit), salgssted (MSN),

@@ -33,10 +33,10 @@ const no: Dict = {
   "about.services": "Se tjenestene mine →",
   "about.hire": "Ta kontakt",
 
-  "license.title": "Lisens & fri bruk",
+  "license.title": "Fritt å bruke",
   "license.body":
-    "{name} er kildeåpen under PolyForm Small Business-lisensen: gratis å bruke hvis selskapet ditt har under 100 personer og under 1M USD i omsetning. Større selskaper trenger en kommersiell lisens — ta kontakt. Uansett: donasjoner holder det i live. 🙏",
-  "license.linkText": "PolyForm Small Business-lisensen",
+    "{name} er MIT-lisensiert. Bruk den til hva du vil, også kommersielt, uten å spørre. Trenger du hjelp med Vipps eller betaling, tar jeg oppdrag — og sparte den deg tid, holder en donasjon prosjektet i live. 🙏",
+  "license.linkText": "MIT-lisensen",
 
   "login.title": "Logg inn",
   "login.continueVipps": "Fortsett med Vipps",
@@ -189,10 +189,10 @@ const en: Dict = {
   "about.services": "See my services →",
   "about.hire": "Hire me",
 
-  "license.title": "License & fair use",
+  "license.title": "Free to use",
   "license.body":
-    "{name} is source-available under the PolyForm Small Business License: free to use if your company has fewer than 100 people and under $1M revenue. Larger companies need a commercial license — get in touch. Either way, donations keep it alive. 🙏",
-  "license.linkText": "PolyForm Small Business License",
+    "{name} is MIT licensed. Use it for anything, commercially included, without asking. If you want help with Vipps or payments I take on work — and if it saved you time, a donation keeps the project alive. 🙏",
+  "license.linkText": "the MIT License",
 
   "login.title": "Sign in",
   "login.continueVipps": "Continue with Vipps",

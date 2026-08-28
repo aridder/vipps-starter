@@ -178,7 +178,7 @@ export function PaymentFlowDiagram({ locale }: { locale: "no" | "en" }) {
             <strong className="font-black text-stone-900">
               Den grå pilen er ikke bevis.
             </strong>{" "}
-            Webhooken er signert, men den leveres minst én gang, uten
+            Webhooken kan signeres, men den leveres minst én gang, uten
             rekkefølgegaranti, og av og til ikke i det hele tatt. Redirecten
             styres av brukeren. Begge er signaler om å gå og spørre Vipps. Den
             grønne pilen er det eneste stedet appen henter sannheten om at
@@ -189,8 +189,8 @@ export function PaymentFlowDiagram({ locale }: { locale: "no" | "en" }) {
             <strong className="font-black text-stone-900">
               The grey arrow is not proof.
             </strong>{" "}
-            The webhook is signed, but it is delivered at least once, with no
-            ordering guarantee, and occasionally not at all. The redirect is
+            The webhook can be signed, but it is delivered at least once, with
+            no ordering guarantee, and occasionally not at all. The redirect is
             controlled by the user. Both are signals to go and ask Vipps. The
             green arrow is the one place the app learns that money actually
             moved.

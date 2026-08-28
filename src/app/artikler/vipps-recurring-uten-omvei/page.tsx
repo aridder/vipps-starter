@@ -1,8 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { cookies } from "next/headers";
 import { resolveSite } from "@/lib/site";
-import { resolveLocale } from "@/lib/i18n";
 import { PaymentFlowDiagram } from "@/components/PaymentFlowDiagram";
 import {
   AuthorizedDiagram,
@@ -13,7 +11,9 @@ import { CopyBlock } from "@/components/CopyBlock";
 
 // Written in Norwegian only, on purpose: the audience that hires for Vipps
 // work is Norwegian, and a half-translated article reads worse than an
-// untranslated one. The app chrome around it stays bilingual.
+// untranslated one. The app chrome around it stays bilingual, but the
+// diagrams are pinned to Norwegian so they cannot switch language underneath
+// Norwegian prose — that combination reads worse than either pure one.
 const PUBLISHED = "28. august 2026";
 const REPO = "https://github.com/aridder/vipps-starter";
 
@@ -51,8 +51,8 @@ await createCharge({
 });`;
 
 const START_CODE = `git clone https://github.com/aridder/vipps-starter
-cd vipps-starter && cp .env.example .env
-npm install && npm run db:up && npm run db:reset
+cd vipps-starter
+./scripts/dev setup   # .env, Postgres, migrasjoner og seed
 npm run dev`;
 
 function H2({ children, id }: { children: React.ReactNode; id: string }) {
@@ -72,8 +72,6 @@ function P({ children }: { children: React.ReactNode }) {
 
 export default async function ArticlePage() {
   const site = resolveSite();
-  const cookieStore = await cookies();
-  const locale = resolveLocale(cookieStore.get("NEXT_LOCALE")?.value);
 
   return (
     <article className="mx-auto max-w-3xl pb-10">
@@ -136,7 +134,7 @@ export default async function ArticlePage() {
         <strong className="font-bold text-stone-900">du må opprette det selv</strong>
         , hver periode.
       </P>
-      <ModelDiagram locale={locale} />
+      <ModelDiagram locale="no" />
       <P>
         Det betyr at et abonnement i Vipps krever en cron du eier. Repoet lager
         trekket tre dager før forfall, fordi Vipps krever at forfallsdatoen
@@ -156,7 +154,7 @@ export default async function ArticlePage() {
         når et bibliotek genererer en fersk UUID per kall. Da er et nytt forsøk
         ikke et nytt forsøk for Vipps. Det er en ny betaling.
       </P>
-      <IdempotencyDiagram locale={locale} />
+      <IdempotencyDiagram locale="no" />
       <P>
         Legg merke til hva nøkkelen er utledet av: vår egen avtale-id og den{" "}
         <em>planlagte</em> perioden. Ikke Vipps&apos; avtale-id, som er sirkulær
@@ -166,20 +164,24 @@ export default async function ArticlePage() {
       </P>
       <div className="my-8">
         <CopyBlock
-          locale={locale}
+          locale="no"
           label="src/server/agreements.ts"
           code={CHARGE_CODE}
           sourceHref={`${REPO}/blob/main/src/server/agreements.ts`}
         />
       </div>
       <P>
-        Det er to lag her, og begge trengs. Den unike{" "}
+        Det er to lag her, og de gjør ikke samme jobb. Oppslaget på{" "}
         <code className="rounded bg-stone-100 px-1.5 py-0.5 font-mono text-[15px]">
           reference
         </code>{" "}
-        i din egen database stopper to samtidige kjøringer. Idempotensnøkkelen hos
-        Vipps stopper krasjet i vinduet mellom at Vipps har opprettet trekket og
-        at du rakk å lagre det. Ingen av dem dekker den andres tilfelle.
+        i din egen base er den billige veien ut: kjenner du trekket fra før,
+        slipper du å ringe Vipps i det hele tatt, og den unike indeksen hindrer
+        to rader for samme trekk. Idempotensnøkkelen er det som redder deg når
+        du <em>ikke</em> vet — enten fordi prosessen døde mellom Vipps-kallet og
+        din commit, eller fordi to kjøringer er i luften samtidig og ingen av dem
+        har rukket å lagre noe. Da er nøkkelen det eneste Vipps har å kjenne
+        forsøket igjen på.
       </P>
       <P>
         Samme resonnement gjelder capture og refusjon. I repoet er handlingen en
@@ -199,9 +201,9 @@ export default async function ArticlePage() {
       <H2 id="status">Mønster 3: status er noe du henter</H2>
       <P>
         Webhooken forteller deg at noe har skjedd. Den er ikke beviset på hva.
-        Ikke fordi den er lett å forfalske — den er HMAC-signert — men fordi den
-        leveres minst én gang, uten rekkefølgegaranti, og av og til ikke i det
-        hele tatt. En{" "}
+        Signaturen kan du verifisere med HMAC, og den bør du sette opp — men
+        selv en verifisert webhook leveres minst én gang, uten
+        rekkefølgegaranti, og av og til ikke i det hele tatt. En{" "}
         <code className="rounded bg-stone-100 px-1.5 py-0.5 font-mono text-[15px]">
           captured
         </code>
@@ -211,12 +213,15 @@ export default async function ArticlePage() {
         </code>
         .
       </P>
-      <PaymentFlowDiagram locale={locale} />
+      <PaymentFlowDiagram locale="no" />
       <P>
         Derfor er den daglige kjøringen ikke bare en trekkmotor, den er også
-        backup for tapte hendelser. Og derfor tør repoet kjøre
-        signaturvalidering i varselmodus som standard: signaturen er ikke det som
-        bærer tilliten. Det autentiserte oppslaget er.
+        backup for tapte hendelser. Det er også grunnen til at repoet tør kjøre
+        signaturvalidering i varselmodus som standard — avvik logges, flyten
+        fortsetter — og at et oppsett uten lagret hemmelighet ikke stopper noe.
+        Slå på håndheving når produksjonsloggene bekrefter at signaturene
+        verifiserer. Poenget er at tilliten uansett ikke hviler der: den hviler
+        på det autentiserte oppslaget.
       </P>
       <P>
         Én detalj som er lett å overse: sideeffekter må være like idempotente som
@@ -235,7 +240,7 @@ export default async function ArticlePage() {
         også etter at du har trukket den. Tilstanden flytter seg ikke ved
         capture.
       </P>
-      <AuthorizedDiagram locale={locale} />
+      <AuthorizedDiagram locale="no" />
       <P>
         Løsningen er ikke å telle selv. Vipps sender beløpene på samme objekt —
         autorisert, trukket, kansellert og refundert — så du speiler dem. Egen
@@ -297,7 +302,7 @@ export default async function ArticlePage() {
         ved et uhell.
       </P>
       <div className="my-8">
-        <CopyBlock locale={locale} label="Kom i gang" code={START_CODE} />
+        <CopyBlock locale="no" label="Kom i gang" code={START_CODE} />
       </div>
       <P>
         Vil du se det virke før du kloner:{" "}

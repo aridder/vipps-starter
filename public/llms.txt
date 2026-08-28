@@ -25,7 +25,7 @@ are intended uses.
 - [Vipps integration guide](https://github.com/aridder/vipps-starter/blob/main/docs/VIPPS.md):
   the authoritative walkthrough of every Vipps API used here, with the
   reasoning behind each choice.
-- [Vipps Recurring uten omvei](https://github.com/aridder/vipps-starter/blob/main/src/app/artikler/vipps-recurring-uten-omvei/page.tsx):
+- [Vipps Recurring uten omvei](/artikler/vipps-recurring-uten-omvei):
   article on the four patterns that separate a subscription integration that
   holds up from one that double-charges — the agreement/charge/payment model,
   idempotency keys, authoritative status, and why AUTHORIZED does not mean

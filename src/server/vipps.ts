@@ -101,12 +101,21 @@ function safeVippsError(body: string): string {
   }
 }
 
+/** Why payments are unavailable. A code, not a sentence: the client owns the
+ *  wording, so an English visitor does not get a Norwegian one. Translated via
+ *  the `reason.*` keys in src/lib/i18n.ts. */
+export type VippsUnavailableReason =
+  | "missingKeys"
+  | "missingMsn"
+  | "agreementInactive"
+  | "unreachable";
+
 export async function vippsApiStatus(): Promise<{
   available: boolean;
-  reason?: string;
+  reasonCode?: VippsUnavailableReason;
 }> {
   if (!vippsConfigured()) {
-    return { available: false, reason: "Vipps-nøkler mangler." };
+    return { available: false, reasonCode: "missingKeys" };
   }
   try {
     await getAccessToken();
@@ -116,9 +125,9 @@ export async function vippsApiStatus(): Promise<{
     const message = error instanceof Error ? error.message : "";
     return {
       available: false,
-      reason: message.includes("invalid_scope")
-        ? "Vipps-betalingsavtalen er ikke aktivert for dette nøkkelsettet."
-        : "Vipps kunne ikke bekrefte betalings-API-et akkurat nå.",
+      reasonCode: message.includes("invalid_scope")
+        ? "agreementInactive"
+        : "unreachable",
     };
   }
 }

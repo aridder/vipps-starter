@@ -68,6 +68,31 @@ export function DonateWidget({
               <div className="h-10 animate-pulse rounded-2xl bg-stone-100" />
               <div className="h-12 animate-pulse rounded-2xl bg-stone-100" />
             </div>
+          ) : available.isError ? (
+            // Distinct from "not enabled": we do not know the state, and
+            // saying "not active yet" would present a guess as a fact.
+            <div
+              role="alert"
+              className="rounded-2xl border border-stone-200 bg-stone-50 p-4 text-sm leading-6 text-stone-700"
+            >
+              <div className="font-bold">
+                {locale === "no"
+                  ? "Fikk ikke kontakt med betalingstjenesten"
+                  : "Could not reach the payment service"}
+              </div>
+              <p className="mt-1">
+                {locale === "no"
+                  ? "Vi vet ikke om betaling er tilgjengelig akkurat nå. Prøv å laste siden på nytt."
+                  : "We do not know whether payments are available right now. Try reloading the page."}
+              </p>
+              <button
+                type="button"
+                onClick={() => void available.refetch()}
+                className="mt-3 rounded-xl border border-stone-300 px-3.5 py-1.5 text-xs font-bold transition hover:border-stone-500"
+              >
+                {locale === "no" ? "Prøv igjen" : "Try again"}
+              </button>
+            </div>
           ) : !on ? (
             <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm leading-6 text-amber-900">
               <div className="font-bold">
@@ -80,9 +105,9 @@ export function DonateWidget({
                   ? "Ingen penger kan trekkes akkurat nå. Donasjonsknappen aktiveres så snart det separate Vipps-nøkkelsettet har ePayment-tilgang."
                   : "No money can be charged right now. The donation button activates as soon as the dedicated Vipps key set has ePayment access."}
               </p>
-              {available.data?.reason && (
+              {available.data?.reasonCode && (
                 <p className="mt-2 text-xs text-amber-700">
-                  {available.data.reason}
+                  {t(`reason.${available.data.reasonCode}`)}
                 </p>
               )}
             </div>
@@ -150,13 +175,17 @@ export function DonateWidget({
               )}
 
               <div className="mt-5">
-                <label
-                  htmlFor="donation-amount"
+                <div
+                  id="donation-amount-label"
                   className="mb-2 block text-xs font-bold uppercase tracking-wider text-stone-400"
                 >
                   {locale === "no" ? "Velg beløp" : "Choose amount"}
-                </label>
-                <div className="grid grid-cols-4 gap-2">
+                </div>
+                <div
+                  role="group"
+                  aria-labelledby="donation-amount-label"
+                  className="grid grid-cols-4 gap-2"
+                >
                   {presets.map((value) => (
                     <button
                       type="button"
@@ -164,7 +193,6 @@ export function DonateWidget({
                       aria-pressed={amount === String(value)}
                       onClick={() => {
                         setAmount(String(value));
-                        setAcknowledged(false);
                       }}
                       className={`rounded-xl py-2.5 text-sm font-bold transition ${
                         amount === String(value)
@@ -193,7 +221,6 @@ export function DonateWidget({
                   value={amount}
                   onChange={(event) => {
                     setAmount(event.target.value);
-                    setAcknowledged(false);
                   }}
                   className="w-full rounded-xl border border-stone-200 px-3 py-3 pr-12 font-semibold outline-none transition focus:border-[#ff5b24] focus:ring-4 focus:ring-[#ff5b24]/10"
                 />
@@ -238,11 +265,13 @@ export function DonateWidget({
               </div>
 
               {mode === "recurring" && recurringOn && !loggedIn ? (
+                // Not gated on the consent checkbox: signing in charges
+                // nothing. Consent is required at the step that actually
+                // creates the agreement, once the user is authenticated.
                 <button
                   type="button"
-                  disabled={!acknowledged}
                   onClick={() => signIn("vipps", { callbackUrl: "/" })}
-                  className="mt-4 w-full rounded-2xl bg-[#ff5b24] py-3.5 font-black text-white shadow-[0_12px_30px_-14px_rgba(255,91,36,0.8)] transition hover:-translate-y-0.5 disabled:translate-y-0 disabled:opacity-50"
+                  className="mt-4 w-full rounded-2xl bg-[#ff5b24] py-3.5 font-black text-white shadow-[0_12px_30px_-14px_rgba(255,91,36,0.8)] transition hover:-translate-y-0.5"
                 >
                   {t("donate.signInRecurring")}
                 </button>
@@ -282,45 +311,6 @@ export function DonateWidget({
                 <Step number="1" text={locale === "no" ? "Du velger beløp" : "You choose an amount"} />
                 <Step number="2" text={locale === "no" ? "Vipps åpnes trygt" : "Vipps opens securely"} />
                 <Step number="3" text={locale === "no" ? "Status bekreftes her" : "Status is confirmed here"} />
-              </div>
-              <div className="mt-4 rounded-2xl bg-stone-950 p-4 text-sm text-stone-200">
-                <div className="font-black text-white">
-                  {locale === "no"
-                    ? "Dette beviser betalingen i praksis"
-                    : "What this payment proves in practice"}
-                </div>
-                <ul className="mt-2 grid gap-1.5 text-xs leading-5 sm:grid-cols-2">
-                  {(mode === "recurring" && recurringOn
-                    ? locale === "no"
-                      ? [
-                          "Vipps Login og kundesamtykke",
-                          "Ekte Recurring-avtale og første trekk",
-                          "Autoritativ status og signert webhook",
-                          "Avtalen kan sees og stoppes på Min side",
-                        ]
-                      : [
-                          "Vipps Login and customer consent",
-                          "Real Recurring agreement and first charge",
-                          "Authoritative status and signed webhook",
-                          "The agreement can be viewed and stopped on My page",
-                        ]
-                    : locale === "no"
-                      ? [
-                          "Ekte ePayment og godkjenning i Vipps",
-                          "Automatisk trekk og Vipps-kvittering",
-                          "Autoritativ status og signert webhook",
-                          "Betaling og oppgjør i Driftssentral",
-                        ]
-                      : [
-                          "Real ePayment and Vipps approval",
-                          "Automatic capture and Vipps receipt",
-                          "Authoritative status and signed webhook",
-                          "Payment and settlement in Operations",
-                        ]
-                  ).map((item) => (
-                    <li key={item}>✓ {item}</li>
-                  ))}
-                </ul>
               </div>
               <p className="mt-3 text-[11px] leading-5 text-stone-400">
                 {locale === "no"

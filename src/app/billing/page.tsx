@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useId, useState } from "react";
 import {
   AgreementInterval,
   AgreementStatus,
@@ -107,7 +107,9 @@ export default function BillingPage() {
               {locale === "no" ? "Vipps-betaling er ikke tilgjengelig akkurat nå" : "Vipps payment is not available right now"}
             </div>
             <p className="mt-1">
-              {available.data?.reason ?? t("billing.notConfigured")}
+              {available.data?.reasonCode
+                ? t(`reason.${available.data.reasonCode}`)
+                : t("billing.notConfigured")}
             </p>
           </div>
         ) : (
@@ -563,9 +565,12 @@ function AmountPicker({
   setAmount: (value: string) => void;
   label: string;
 }) {
+  // `label` is display text, so interpolating it produced ids with spaces and
+  // parentheses. useId is stable across server and client render.
+  const fieldId = useId();
   return (
     <div>
-      <label htmlFor={`amount-${label}`} className="mb-2 block text-xs font-black uppercase tracking-wider text-stone-400">
+      <label htmlFor={fieldId} className="mb-2 block text-xs font-black uppercase tracking-wider text-stone-400">
         {label}
       </label>
       <div className="grid grid-cols-3 gap-2">
@@ -587,7 +592,7 @@ function AmountPicker({
       </div>
       <div className="relative mt-3">
         <input
-          id={`amount-${label}`}
+          id={fieldId}
           type="number"
           min={1}
           value={amount}
@@ -668,7 +673,7 @@ function MySubscriptions() {
                     <div className="mt-1 truncate text-xs text-stone-400">
                       {agreement.description}
                       {agreement.nextChargeDate
-                        ? ` · ${t("billing.next")} ${formatDate(agreement.nextChargeDate)}`
+                        ? ` · ${t("billing.next")} ${formatDate(agreement.nextChargeDate, locale)}`
                         : ""}
                     </div>
                   </div>
@@ -733,7 +738,7 @@ function MyHistory() {
               <div className="min-w-0 flex-1">
                 <div className="font-bold">{payment.amountOre / 100} kr</div>
                 <div className="truncate text-xs text-stone-400">
-                  {payment.description} · {formatDate(payment.createdAt)}
+                  {payment.description} · {formatDate(payment.createdAt, locale)}
                 </div>
               </div>
               <StatusPill

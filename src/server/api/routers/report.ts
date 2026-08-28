@@ -33,7 +33,7 @@ export const reportRouter = createTRPCRouter({
         return {
           available: false as const,
           date: input.date ?? todayInOslo(),
-          reason: "Organisasjonen mangler Vipps MSN.",
+          reasonCode: "missingMsn" as const,
         };
       }
       return getReportOverview(msn, input.date ?? todayInOslo());

@@ -66,17 +66,20 @@ export function RealPaymentNotice({
                 : "The solution uses production payments when the Vipps agreement is active. Payments are currently blocked while dedicated ePayment keys are pending, so no money can be charged. Every donation will be deeply appreciated when we open."}
         </p>
       </div>
+      {/* When payments are off, "see the donation flow" scrolled to a box that
+          says donations are unavailable — a click that answers "no". Send
+          people to the code instead, which is the thing that still works. */}
       <a
-        href="#donate"
+        href={on ? "#donate" : "#kode"}
         className="mt-4 inline-flex shrink-0 items-center justify-center rounded-xl bg-stone-950 px-4 py-2.5 text-sm font-black text-white transition hover:-translate-y-0.5 sm:mt-0"
       >
         {locale === "no"
           ? on
             ? "Doner med Vipps ↓"
-            : "Se donasjonsflyten ↓"
+            : "Se koden i stedet ↓"
           : on
             ? "Donate with Vipps ↓"
-            : "See the donation flow ↓"}
+            : "See the code instead ↓"}
       </a>
     </section>
   );

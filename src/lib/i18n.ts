@@ -14,42 +14,14 @@ type Dict = Record<string, string>;
 
 const no: Dict = {
   "nav.home": "Hjem",
-  "nav.billing": "Betaling",
-  "nav.admin": "Admin",
   "nav.settings": "Innstillinger",
   "nav.signIn": "Logg inn",
 
-  "hero.badge": "Vipps · Next.js · tRPC · Prisma",
-  "hero.ctaSupport": "Støtt med Vipps",
-  "hero.ctaGithub": "Hent på GitHub →",
-  "hero.realNote":
-    "Donasjonen under er en <b>ekte Vipps-betaling</b> til utvikleren — så du ser integrasjonen virke fra ende til ende.",
 
-  "features.title": "Alt du trenger for Vipps",
-  "features.f1.title": "Engangsbetaling",
-  "features.f1.body":
-    "Vipps ePayment med autoritativ statussjekk — stol aldri på en webhook-kropp.",
-  "features.f2.title": "Abonnement",
-  "features.f2.body":
-    "Faste avtaler + en daglig cron som fornyer trekk før forfall.",
-  "features.f3.title": "Webhooks + signatur",
-  "features.f3.body":
-    "HMAC-validerte webhooks (warn eller enforce) som ikke kan forfalske en betaling.",
-  "features.f4.title": "Partner / super-merchant",
-  "features.f4.body":
-    "Fakturer hver klubb/kunde til sitt eget MSN; selvbetjent webhook-onboarding per org.",
-  "features.f5.title": "Refusjon & reservasjon",
-  "features.f5.body":
-    "Valgfri admin-konsoll: capture, delvis refusjon, kansellering — av som standard.",
-  "features.f6.title": "Batteriene inkludert",
-  "features.f6.body":
-    "Auth (Vipps Login + dev), Prisma/Postgres, feature flags, e2e med skjermbilder.",
 
   "donate.title": "Støtt prosjektet 💜",
   "donate.sub":
     "Hvis {name} sparer deg tid, spander det du kan. Hver krone hjelper med å holde det vedlike.",
-  "donate.notConfigured":
-    "Vipps er ikke satt opp på denne instansen ennå. Når verten legger inn Vipps-nøkler + MSN, tar denne knappen ekte donasjoner.",
   "donate.once": "Engang",
   "donate.recurring": "Månedlig / årlig",
   "donate.signInRecurring": "Logg inn med Vipps for å sette opp fast støtte",
@@ -65,7 +37,6 @@ const no: Dict = {
   "license.body":
     "{name} er kildeåpen under PolyForm Small Business-lisensen: gratis å bruke hvis selskapet ditt har under 100 personer og under 1M USD i omsetning. Større selskaper trenger en kommersiell lisens — ta kontakt. Uansett: donasjoner holder det i live. 🙏",
   "license.linkText": "PolyForm Small Business-lisensen",
-  "license.contact": "ta kontakt",
 
   "login.title": "Logg inn",
   "login.continueVipps": "Fortsett med Vipps",
@@ -106,8 +77,6 @@ const no: Dict = {
   "profile.signOut": "Logg ut",
   "profile.signInToView": "Logg inn for å se profilen din.",
 
-  "billing.title": "Betaling",
-  "billing.subtitle": "Betal med Vipps.",
   "billing.notConfigured":
     "💳 Vipps-betaling aktiveres når organisasjonen har lagt inn betalings-API-nøklene og koblet til sitt MSN.",
   "billing.once": "Engang",
@@ -148,8 +117,6 @@ const no: Dict = {
   "settings.add": "Legg til",
   "settings.remove": "fjern",
 
-  "admin.title": "Betaling",
-  "admin.subtitle": "Administrer betalinger, refusjoner, reservasjoner og abonnement.",
   "admin.requiresAdmin": "Krever admin-tilgang.",
   "admin.disabled":
     "Admin-konsollen for betaling er avslått. Slå den på med FEATURE_PAYMENT_ADMIN=true for å håndtere refusjoner, reservasjoner og abonnement.",
@@ -176,7 +143,6 @@ const no: Dict = {
   "admin.noSubs": "Ingen abonnement ennå.",
   "admin.max": "maks {n} kr",
 
-  "footer.by": "Laget av",
 
   "status.pending": "Venter",
   "status.reserved": "Reservert",
@@ -188,6 +154,11 @@ const no: Dict = {
   "astatus.active": "Aktiv",
   "astatus.stopped": "Sagt opp",
   "astatus.expired": "Utløpt",
+  "reason.missingKeys": "Vipps-nøkler mangler.",
+  "reason.missingMsn": "Organisasjonen mangler Vipps MSN.",
+  "reason.agreementInactive":
+    "Vipps-betalingsavtalen er ikke aktivert for dette nøkkelsettet.",
+  "reason.unreachable": "Vipps kunne ikke bekrefte betalings-API-et akkurat nå.",
   "interval.month": "Månedlig",
   "interval.year": "Årlig",
   "per.mo": "/ mnd",
@@ -199,42 +170,14 @@ const no: Dict = {
 
 const en: Dict = {
   "nav.home": "Home",
-  "nav.billing": "Billing",
-  "nav.admin": "Admin",
   "nav.settings": "Settings",
   "nav.signIn": "Sign in",
 
-  "hero.badge": "Vipps · Next.js · tRPC · Prisma",
-  "hero.ctaSupport": "Support with Vipps",
-  "hero.ctaGithub": "Get it on GitHub →",
-  "hero.realNote":
-    "The donation below is a <b>real Vipps payment</b> to the maintainer — so you can see the integration work end-to-end.",
 
-  "features.title": "Everything you need for Vipps",
-  "features.f1.title": "One-off payments",
-  "features.f1.body":
-    "Vipps ePayment with authoritative status sync — never trust a webhook body.",
-  "features.f2.title": "Subscriptions",
-  "features.f2.body":
-    "Recurring agreements + a daily cron that renews charges before they're due.",
-  "features.f3.title": "Webhooks + signatures",
-  "features.f3.body":
-    "HMAC-validated webhooks (warn or enforce) that can't fake a payment.",
-  "features.f4.title": "Partner / super-merchant",
-  "features.f4.body":
-    "Bill each tenant to its own MSN; self-serve webhook onboarding per org.",
-  "features.f5.title": "Refunds & reserves",
-  "features.f5.body":
-    "Optional admin console: capture, partial refund, cancel — off by default.",
-  "features.f6.title": "Batteries included",
-  "features.f6.body":
-    "Auth (Vipps Login + dev), Prisma/Postgres, feature flags, e2e with screenshots.",
 
   "donate.title": "Support the project 💜",
   "donate.sub":
     "If {name} saves you time, chip in what you can. Every krone helps keep it maintained.",
-  "donate.notConfigured":
-    "Vipps isn't configured on this instance yet. Once the host adds its Vipps keys + MSN, this button takes real donations.",
   "donate.once": "One-off",
   "donate.recurring": "Monthly / yearly",
   "donate.signInRecurring": "Sign in with Vipps to set up recurring support",
@@ -250,7 +193,6 @@ const en: Dict = {
   "license.body":
     "{name} is source-available under the PolyForm Small Business License: free to use if your company has fewer than 100 people and under $1M revenue. Larger companies need a commercial license — get in touch. Either way, donations keep it alive. 🙏",
   "license.linkText": "PolyForm Small Business License",
-  "license.contact": "get in touch",
 
   "login.title": "Sign in",
   "login.continueVipps": "Continue with Vipps",
@@ -291,8 +233,6 @@ const en: Dict = {
   "profile.signOut": "Sign out",
   "profile.signInToView": "Sign in to view your profile.",
 
-  "billing.title": "Billing",
-  "billing.subtitle": "Pay with Vipps.",
   "billing.notConfigured":
     "💳 Vipps payments activate once the organization has entered its payment API keys and connected its MSN.",
   "billing.once": "One-time",
@@ -331,8 +271,6 @@ const en: Dict = {
   "settings.add": "Add",
   "settings.remove": "remove",
 
-  "admin.title": "Billing",
-  "admin.subtitle": "Manage payments, refunds, reserves and subscriptions.",
   "admin.requiresAdmin": "Requires admin access.",
   "admin.disabled":
     "The billing admin console is disabled. Enable it with FEATURE_PAYMENT_ADMIN=true to manage refunds, reserves and subscriptions.",
@@ -359,7 +297,6 @@ const en: Dict = {
   "admin.noSubs": "No subscriptions yet.",
   "admin.max": "max {n} kr",
 
-  "footer.by": "Built by",
 
   "status.pending": "Pending",
   "status.reserved": "Reserved",
@@ -371,6 +308,11 @@ const en: Dict = {
   "astatus.active": "Active",
   "astatus.stopped": "Stopped",
   "astatus.expired": "Expired",
+  "reason.missingKeys": "Vipps keys are missing.",
+  "reason.missingMsn": "This organization has no Vipps MSN.",
+  "reason.agreementInactive":
+    "The Vipps payment agreement is not active for this key set.",
+  "reason.unreachable": "Vipps could not confirm the payment API right now.",
   "interval.month": "Monthly",
   "interval.year": "Yearly",
   "per.mo": "/ mo",

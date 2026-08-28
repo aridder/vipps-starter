@@ -3,8 +3,9 @@
 Everything you need to accept **Vipps** payments in a real product: one-off
 payments, **subscriptions** (recurring charges with an automatic renewal run),
 **QR**, **Vipps Login**, **signed webhooks**, refunds, settlement
-reconciliation, and the **partner / super-merchant** model where each customer
-is billed to their own salgssted (MSN).
+reconciliation, and the **partner model** (often called "super-merchant", though that is not
+Vipps' term) where every customer keeps their own salgssted (MSN) and
+settlement.
 
 Not a tutorial and not a snippet dump — a running application with the
 authorization, database and failure handling that real money requires.
@@ -31,7 +32,7 @@ features.
 | **Webhooks v1** | register/list/delete per MSN, HMAC-SHA256 signature check | `src/server/vipps-webhooks.ts`, `/api/vipps/webhook` |
 | **QR** | ePayment with `userFlow: QR`, customer-present semantics | `src/server/vipps.ts`, `/billing` |
 | **Report / Settlement** | ledgers, funds and fees by date, for reconciliation | `src/server/vipps-report.ts` |
-| **Partner / super-merchant** | per-organization MSN, self-service webhook onboarding | `org.connectVipps`, `/settings` |
+| **Partner (many sales units)** | per-organization MSN, self-service webhook onboarding; money settles to each business directly | `org.connectVipps`, `/settings` |
 | **ePayment Express** | full flow with server-controlled product + shipping — **off by default** until you configure a real product | `src/server/vipps-express.ts` |
 | **Order Management** | rich receipt sent with each ePayment (the standalone endpoints are not called) | `src/server/vipps.ts` |
 | **Agentic Commerce (UCP)** | payment-handler contract only — **no production calls**, deliberately | `src/server/vipps-agentic.ts` |

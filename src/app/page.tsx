@@ -7,6 +7,8 @@ import { RealPaymentNotice } from "@/components/RealPaymentNotice";
 import { RoleJourney } from "@/components/RoleJourney";
 import { IntegrationShowcase } from "@/components/IntegrationShowcase";
 import { PaymentFlowDiagram } from "@/components/PaymentFlowDiagram";
+import { ProductChooser } from "@/components/ProductChooser";
+import { Faq } from "@/components/Faq";
 
 export default async function LandingPage() {
   const site = resolveSite();
@@ -97,10 +99,10 @@ export default async function LandingPage() {
     {
       state: "built",
       code: "src/server/api/routers/org.ts",
-      name: no ? "Partner / super-merchant" : "Partner / super-merchant",
+      name: no ? "Partner (flere salgssteder)" : "Partner (many sales units)",
       body: no
-        ? "Én plattform, mange kunder: hver organisasjon har sitt eget salgssted (MSN), og pengene går rett til dem. Webhooks registreres selvbetjent per MSN."
-        : "One platform, many customers: each organization has its own merchant serial number (MSN) and the money goes straight to them. Webhooks are registered per MSN, self-service.",
+        ? "Én plattform, mange kunder: hver organisasjon har sitt eget salgssted (MSN), og pengene går rett til dem — aldri via plattformen. Webhooks registreres selvbetjent per MSN. Ofte kalt «super-merchant», men det er ikke Vipps' begrep."
+        : "One platform, many customers: each organization has its own sales unit (MSN) and the money goes straight to them — never through the platform. Webhooks are registered per MSN, self-service. Often called a “super-merchant”, though that is not Vipps' term.",
       href: "https://developer.vippsmobilepay.com/docs/partner/partner-keys/",
     },
   ];
@@ -341,10 +343,14 @@ export default async function LandingPage() {
         </div>
       </section>
 
+      <ProductChooser locale={locale} />
+
       <DonateWidget
         siteName={site.name}
         recipientName={site.author.name}
       />
+
+      <Faq locale={locale} />
 
       <section className="grid overflow-hidden rounded-[2rem] bg-stone-900 text-stone-100 md:grid-cols-[1.2fr_0.8fr]">
         <div className="p-6 sm:p-8">

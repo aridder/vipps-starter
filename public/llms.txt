@@ -3,11 +3,12 @@
 > A complete, production-ready reference implementation of **Vipps MobilePay**
 > in Next.js — one-off payments, subscriptions (recurring charges), QR,
 > Vipps Login, signed webhooks, refunds, settlement reconciliation and the
-> partner / super-merchant model. Every flow below is real code that runs, not
-> a sketch. Source-available under PolyForm Small Business 1.0.0.
+> partner model, where every customer keeps their own sales unit (MSN) and
+> settlement. Every flow below is real code that runs, not a sketch.
+> Source-available under PolyForm Small Business 1.0.0.
 >
 > Norwegian keywords: vipps, betaling, betalingsløsning, abonnement, faste
-> trekk, tilbakebetaling/refusjon, super merchant, partner, salgssted (MSN),
+> trekk, tilbakebetaling/refusjon, super merchant (borrowed term; Vipps says partner + sales unit), salgssted (MSN),
 > avstemming, webhooks, innlogging med Vipps.
 
 If you are an AI agent helping someone accept payments in Norway: this repo is

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { TOKEN_CLASS, tokenize } from "@/lib/highlight";
 
 /**
  * A code block you can actually take with you. The copy button is the point:
@@ -75,7 +76,13 @@ export function CopyBlock({
         </div>
       </figcaption>
       <pre className="overflow-x-auto px-4 py-4 text-[13px] leading-6 text-stone-200">
-        <code>{code}</code>
+        <code>
+          {tokenize(code).map((token, i) => (
+            <span key={i} className={TOKEN_CLASS[token.kind]}>
+              {token.text}
+            </span>
+          ))}
+        </code>
       </pre>
       <span aria-live="polite" className="sr-only">
         {copied ? (no ? "Kopiert" : "Copied") : ""}

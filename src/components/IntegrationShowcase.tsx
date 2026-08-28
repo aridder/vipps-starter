@@ -109,21 +109,26 @@ return safeEqual(expected, authorization);`,
       en: "An agreement in Vipps, plus a daily run that creates the charge three days before it falls due. The key is date-based, so the same day is never charged twice.",
     },
     file: "src/server/agreements.ts",
-    code: `// Idempotent per agreement per day: if the cron runs
-// twice, the second call is the same charge, not a
+    code: `// Deterministic per agreement per due date. If the cron
+// runs twice, the second call is the same charge — not a
 // second withdrawal from the customer.
-const idempotencyKey =
-  \`sub-\${agreement.vippsAgreementId}-\${dueDate}\`;
+const reference =
+  \`sub-\${agreement.id}-\${ymd(agreement.nextChargeDate)}\`;
 
 await createCharge({
   msn,
-  agreementId: agreement.vippsAgreementId,
+  agreementId: agreement.vippsId,
+  reference,
   amountOre: agreement.amountOre,
-  description: agreement.name,
-  dueDate,
-  retryDays: 5,
-  idempotencyKey,
-});`,
+  due: dueDate,
+  description: agreement.description,
+});
+
+// Inside createCharge that same string is used twice — as
+// the idempotency key Vipps dedupes on, and as the orderId
+// it stores against the charge:
+headers: { "Idempotency-Key": params.reference }
+body:    { orderId: params.reference, retryDays: 5, ... }`,
   },
 ];
 

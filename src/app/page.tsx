@@ -346,6 +346,28 @@ export default async function LandingPage() {
         </div>
       </section>
 
+      <section className="rounded-[2rem] border border-stone-200 bg-white p-6 sm:p-8">
+        <div className="text-xs font-bold uppercase tracking-[0.2em] text-[#ff5b24]">
+          {no ? "Les mer" : "Read more"}
+        </div>
+        <h2 className="mt-3 text-2xl font-black tracking-tight sm:text-3xl">
+          {no
+            ? "Vipps Recurring uten omvei"
+            : "Vipps Recurring, the direct route"}
+        </h2>
+        <p className="mt-3 max-w-2xl text-sm leading-6 text-stone-600">
+          {no
+            ? "Fire mønstre som skiller en abonnementsintegrasjon som holder fra en som dobbelttrekker — modellen, idempotensnøkkelen, autoritativ status og AUTHORIZED-detaljen. Med diagrammer og ekte kode."
+            : "Four patterns that separate a subscription integration that holds up from one that double-charges — the model, the idempotency key, authoritative status and the AUTHORIZED detail. With diagrams and real code."}
+        </p>
+        <Link
+          href="/artikler/vipps-recurring-uten-omvei"
+          className="mt-5 inline-block rounded-xl bg-stone-900 px-5 py-3 text-sm font-black text-white transition hover:-translate-y-0.5"
+        >
+          {no ? "Les artikkelen" : "Read the article"} →
+        </Link>
+      </section>
+
       <ProductChooser locale={locale} />
 
       <DonateWidget

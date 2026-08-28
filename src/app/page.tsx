@@ -9,6 +9,7 @@ import { IntegrationShowcase } from "@/components/IntegrationShowcase";
 import { PaymentFlowDiagram } from "@/components/PaymentFlowDiagram";
 import { ProductChooser } from "@/components/ProductChooser";
 import { Faq } from "@/components/Faq";
+import { PaymentStates } from "@/components/PaymentStates";
 
 export default async function LandingPage() {
   const site = resolveSite();
@@ -245,6 +246,8 @@ export default async function LandingPage() {
           <PaymentFlowDiagram locale={locale} />
         </div>
       </section>
+
+      <PaymentStates locale={locale} />
 
       <section>
         <div className="grid gap-8 lg:grid-cols-[0.8fr_1.2fr] lg:items-end">

@@ -261,11 +261,13 @@ export function DonateWidget({
               </div>
 
               {mode === "recurring" && recurringOn && !loggedIn ? (
+                // Not gated on the consent checkbox: signing in charges
+                // nothing. Consent is required at the step that actually
+                // creates the agreement, once the user is authenticated.
                 <button
                   type="button"
-                  disabled={!acknowledged}
                   onClick={() => signIn("vipps", { callbackUrl: "/" })}
-                  className="mt-4 w-full rounded-2xl bg-[#ff5b24] py-3.5 font-black text-white shadow-[0_12px_30px_-14px_rgba(255,91,36,0.8)] transition hover:-translate-y-0.5 disabled:translate-y-0 disabled:opacity-50"
+                  className="mt-4 w-full rounded-2xl bg-[#ff5b24] py-3.5 font-black text-white shadow-[0_12px_30px_-14px_rgba(255,91,36,0.8)] transition hover:-translate-y-0.5"
                 >
                   {t("donate.signInRecurring")}
                 </button>
@@ -305,45 +307,6 @@ export function DonateWidget({
                 <Step number="1" text={locale === "no" ? "Du velger beløp" : "You choose an amount"} />
                 <Step number="2" text={locale === "no" ? "Vipps åpnes trygt" : "Vipps opens securely"} />
                 <Step number="3" text={locale === "no" ? "Status bekreftes her" : "Status is confirmed here"} />
-              </div>
-              <div className="mt-4 rounded-2xl bg-stone-950 p-4 text-sm text-stone-200">
-                <div className="font-black text-white">
-                  {locale === "no"
-                    ? "Dette beviser betalingen i praksis"
-                    : "What this payment proves in practice"}
-                </div>
-                <ul className="mt-2 grid gap-1.5 text-xs leading-5 sm:grid-cols-2">
-                  {(mode === "recurring" && recurringOn
-                    ? locale === "no"
-                      ? [
-                          "Vipps Login og kundesamtykke",
-                          "Ekte Recurring-avtale og første trekk",
-                          "Autoritativ status og signert webhook",
-                          "Avtalen kan sees og stoppes på Min side",
-                        ]
-                      : [
-                          "Vipps Login and customer consent",
-                          "Real Recurring agreement and first charge",
-                          "Authoritative status and signed webhook",
-                          "The agreement can be viewed and stopped on My page",
-                        ]
-                    : locale === "no"
-                      ? [
-                          "Ekte ePayment og godkjenning i Vipps",
-                          "Automatisk trekk og Vipps-kvittering",
-                          "Autoritativ status og signert webhook",
-                          "Betaling og oppgjør i Driftssentral",
-                        ]
-                      : [
-                          "Real ePayment and Vipps approval",
-                          "Automatic capture and Vipps receipt",
-                          "Authoritative status and signed webhook",
-                          "Payment and settlement in Operations",
-                        ]
-                  ).map((item) => (
-                    <li key={item}>✓ {item}</li>
-                  ))}
-                </ul>
               </div>
               <p className="mt-3 text-[11px] leading-5 text-stone-400">
                 {locale === "no"

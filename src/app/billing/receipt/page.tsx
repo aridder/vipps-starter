@@ -81,6 +81,27 @@ export default function ReceiptPage() {
               ? "Betalingen gikk gjennom ePayment, og statusen du så ble hentet autoritativt fra Vipps – ikke gjettet fra en redirect. Alt sammen er noen få hundre linjer du kan kopiere."
               : "The payment went through ePayment, and the status you saw was fetched authoritatively from Vipps — not guessed from a redirect. All of it is a few hundred lines you can copy."}
           </p>
+          {/* This list used to sit on the landing page, before anyone had paid,
+              as a fourth "these are real payments" block. It belongs here,
+              where every line of it has just actually happened. */}
+          <ul className="mt-4 grid gap-1.5 text-xs leading-5 text-stone-600 sm:grid-cols-2">
+            {(locale === "no"
+              ? [
+                  "Ekte ePayment og godkjenning i Vipps",
+                  "Automatisk trekk og Vipps-kvittering",
+                  "Autoritativ status, ikke en redirect",
+                  "Signert webhook som trigger",
+                ]
+              : [
+                  "A real ePayment approved in Vipps",
+                  "Automatic capture and a Vipps receipt",
+                  "Authoritative status, not a redirect",
+                  "A signed webhook as the trigger",
+                ]
+            ).map((item) => (
+              <li key={item}>✓ {item}</li>
+            ))}
+          </ul>
           <div className="mt-4 flex flex-wrap gap-x-5 gap-y-2 text-xs font-bold">
             <a
               href="https://github.com/aridder/vipps-starter/blob/main/src/server/vipps.ts"

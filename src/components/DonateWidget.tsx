@@ -105,9 +105,9 @@ export function DonateWidget({
                   ? "Ingen penger kan trekkes akkurat nå. Donasjonsknappen aktiveres så snart det separate Vipps-nøkkelsettet har ePayment-tilgang."
                   : "No money can be charged right now. The donation button activates as soon as the dedicated Vipps key set has ePayment access."}
               </p>
-              {available.data?.reason && (
+              {available.data?.reasonCode && (
                 <p className="mt-2 text-xs text-amber-700">
-                  {available.data.reason}
+                  {t(`reason.${available.data.reasonCode}`)}
                 </p>
               )}
             </div>

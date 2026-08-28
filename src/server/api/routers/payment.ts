@@ -186,9 +186,11 @@ export const paymentRouter = createTRPCRouter({
     }
     const apiStatus = await vippsApiStatus();
     if (!apiStatus.available) {
+      // The client maps this code through `reason.*`; the message is a
+      // fallback for non-UI callers.
       throw new TRPCError({
         code: "PRECONDITION_FAILED",
-        message: apiStatus.reason,
+        message: apiStatus.reasonCode ?? "unreachable",
       });
     }
     const org = ctx.orgId
@@ -258,7 +260,7 @@ export const paymentRouter = createTRPCRouter({
     if (!vippsConfigured()) {
       return {
         available: false,
-        reason: "Vipps-nøkler mangler.",
+        reasonCode: "missingKeys" as const,
         express: null,
       };
     }
@@ -271,7 +273,7 @@ export const paymentRouter = createTRPCRouter({
     if (!resolveMsn(org?.vippsMsn)) {
       return {
         available: false,
-        reason: "Organisasjonen mangler Vipps MSN.",
+        reasonCode: "missingMsn" as const,
         express: null,
       };
     }

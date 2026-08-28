@@ -1,24 +1,9 @@
-import type {
-  AgreementInterval,
-  AgreementStatus,
-  PaymentPurpose,
-  PaymentStatus,
-} from "@prisma/client";
+import type { AgreementStatus, PaymentStatus } from "@prisma/client";
+import type { Locale } from "@/lib/i18n";
 
-export const PAYMENT_PURPOSE_LABELS: Record<PaymentPurpose, string> = {
-  ONE_TIME: "One-time",
-  SUBSCRIPTION: "Subscription",
-  DONATION: "Donation",
-};
-
-export const PAYMENT_STATUS_LABELS: Record<PaymentStatus, string> = {
-  CREATED: "Pending",
-  AUTHORIZED: "Reserved",
-  PAID: "Paid",
-  CANCELLED: "Cancelled",
-  FAILED: "Failed",
-  REFUNDED: "Refunded",
-};
+// Only styling and formatting live here. Every user-visible STRING belongs in
+// the i18n dictionary — this file used to carry English-only copies of labels
+// that already existed there, which meant Norwegian users saw English.
 
 export const PAYMENT_STATUS_COLORS: Record<PaymentStatus, string> = {
   CREATED: "bg-amber-100 text-amber-800",
@@ -29,23 +14,6 @@ export const PAYMENT_STATUS_COLORS: Record<PaymentStatus, string> = {
   REFUNDED: "bg-violet-100 text-violet-800",
 };
 
-export const AGREEMENT_INTERVAL_LABELS: Record<AgreementInterval, string> = {
-  MONTH: "Monthly",
-  YEAR: "Yearly",
-};
-
-export const AGREEMENT_INTERVAL_SUFFIX: Record<AgreementInterval, string> = {
-  MONTH: "/ mo",
-  YEAR: "/ yr",
-};
-
-export const AGREEMENT_STATUS_LABELS: Record<AgreementStatus, string> = {
-  PENDING: "Awaiting approval",
-  ACTIVE: "Active",
-  STOPPED: "Stopped",
-  EXPIRED: "Expired",
-};
-
 export const AGREEMENT_STATUS_COLORS: Record<AgreementStatus, string> = {
   PENDING: "bg-amber-100 text-amber-800",
   ACTIVE: "bg-emerald-100 text-emerald-800",
@@ -53,8 +21,8 @@ export const AGREEMENT_STATUS_COLORS: Record<AgreementStatus, string> = {
   EXPIRED: "bg-red-100 text-red-800",
 };
 
-export function formatDate(date: Date): string {
-  return new Intl.DateTimeFormat("en-GB", {
+export function formatDate(date: Date, locale: Locale = "no"): string {
+  return new Intl.DateTimeFormat(locale === "no" ? "nb-NO" : "en-GB", {
     day: "numeric",
     month: "short",
     hour: "2-digit",

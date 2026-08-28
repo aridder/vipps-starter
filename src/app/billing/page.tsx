@@ -107,7 +107,9 @@ export default function BillingPage() {
               {locale === "no" ? "Vipps-betaling er ikke tilgjengelig akkurat nå" : "Vipps payment is not available right now"}
             </div>
             <p className="mt-1">
-              {available.data?.reason ?? t("billing.notConfigured")}
+              {available.data?.reasonCode
+                ? t(`reason.${available.data.reasonCode}`)
+                : t("billing.notConfigured")}
             </p>
           </div>
         ) : (
@@ -671,7 +673,7 @@ function MySubscriptions() {
                     <div className="mt-1 truncate text-xs text-stone-400">
                       {agreement.description}
                       {agreement.nextChargeDate
-                        ? ` · ${t("billing.next")} ${formatDate(agreement.nextChargeDate)}`
+                        ? ` · ${t("billing.next")} ${formatDate(agreement.nextChargeDate, locale)}`
                         : ""}
                     </div>
                   </div>
@@ -736,7 +738,7 @@ function MyHistory() {
               <div className="min-w-0 flex-1">
                 <div className="font-bold">{payment.amountOre / 100} kr</div>
                 <div className="truncate text-xs text-stone-400">
-                  {payment.description} · {formatDate(payment.createdAt)}
+                  {payment.description} · {formatDate(payment.createdAt, locale)}
                 </div>
               </div>
               <StatusPill

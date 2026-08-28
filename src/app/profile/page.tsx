@@ -6,7 +6,7 @@ import { formatDate } from "@/lib/labels";
 import { useI18n } from "@/components/I18nProvider";
 
 export default function ProfilePage() {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const me = api.meta.me.useQuery(undefined, { retry: false });
   const utils = api.useUtils();
   const notifications = api.notification.list.useQuery(undefined, {
@@ -63,7 +63,7 @@ export default function ProfilePage() {
               <div className="text-xs text-stone-500">{n.body}</div>
             )}
             <div className="mt-1 text-[10px] text-stone-400">
-              {formatDate(n.createdAt)}
+              {formatDate(n.createdAt, locale)}
             </div>
           </div>
         ))}

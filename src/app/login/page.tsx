@@ -9,11 +9,25 @@ type Providers = Awaited<ReturnType<typeof getProviders>>;
 export default function LoginPage() {
   const { locale, t } = useI18n();
   const [providers, setProviders] = useState<Providers>(null);
+  // `providers === null` is the initial state AND "none configured". Without
+  // telling them apart, a slow getProviders() flashes the alarming "no sign-in
+  // methods are configured" before the Vipps button appears.
+  const [loadingProviders, setLoadingProviders] = useState(true);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
 
   useEffect(() => {
-    void getProviders().then(setProviders);
+    let cancelled = false;
+    void getProviders()
+      .then((result) => {
+        if (!cancelled) setProviders(result);
+      })
+      .finally(() => {
+        if (!cancelled) setLoadingProviders(false);
+      });
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const hasVipps = !!providers?.vipps;
@@ -110,7 +124,14 @@ export default function LoginPage() {
         </form>
       )}
 
-      {!hasVipps && !hasDev && (
+      {loadingProviders && (
+        <div
+          aria-hidden
+          className="mx-auto h-11 w-full max-w-xs animate-pulse rounded-xl bg-stone-100"
+        />
+      )}
+
+      {!loadingProviders && !hasVipps && !hasDev && (
         <p className="text-center text-sm text-stone-500">
           {t("login.noProviders")}
         </p>

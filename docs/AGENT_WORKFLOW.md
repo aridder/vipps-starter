@@ -33,7 +33,12 @@ means dozens of tight iterations per minute instead of a few.
 
 ## Pre-warming: never wait on setup
 
-`scripts/setup.sh` runs on `SessionStart` (Claude Code) and via `npm run setup`.
+`scripts/setup.sh` runs via `npm run setup`. It is deliberately not wired to a
+checked-in `SessionStart` hook: that would run the setup script of whatever
+branch is checked out — a contributor's pull request included — without asking.
+Wire it up per machine in `.claude/settings.local.json` (gitignored) if you want
+it automatic.
+
 It is idempotent and fast on warm sessions: installs deps only if missing,
 regenerates the Prisma client, and applies migrations + seed when a database is
 reachable. The agent starts a task with the client generated and the DB in a

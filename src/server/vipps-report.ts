@@ -1,4 +1,4 @@
-import { BASE, getAccessToken } from "@/server/vipps";
+import { BASE, baseHeaders, getAccessToken } from "@/server/vipps";
 
 type Ledger = {
   ledgerId: string;
@@ -24,14 +24,22 @@ type ReportResponse = {
   items?: ReportEntry[];
 };
 
-async function reportFetch<T>(path: string): Promise<{
+// Same header set as every other Vipps module. The subscription key is not
+// optional: Vipps fronts these APIs with Azure API Management, which rejects a
+// request without `Ocp-Apim-Subscription-Key` before it ever reaches Report —
+// and this module turns any non-OK status into a generic "unavailable", so the
+// omission surfaced as an empty reconciliation tab rather than as an error.
+async function reportFetch<T>(
+  msn: string,
+  path: string,
+): Promise<{
   ok: boolean;
   status: number;
   data: T | null;
 }> {
   const token = await getAccessToken();
   const response = await fetch(`${BASE}${path}`, {
-    headers: { Authorization: `Bearer ${token}` },
+    headers: { ...baseHeaders(msn), Authorization: `Bearer ${token}` },
     cache: "no-store",
   });
   if (response.status === 404) {
@@ -46,6 +54,7 @@ async function reportFetch<T>(path: string): Promise<{
 export async function getReportOverview(msn: string, date: string) {
   try {
     const ledgersResult = await reportFetch<{ items?: Ledger[] }>(
+      msn,
       `/settlement/v1/ledgers?settlesForRecipientHandles=${encodeURIComponent(`api:${msn}`)}`,
     );
     if (!ledgersResult.ok) {
@@ -68,9 +77,11 @@ export async function getReportOverview(msn: string, date: string) {
 
     const [fundsResult, feesResult] = await Promise.all([
       reportFetch<ReportResponse>(
+        msn,
         `/report/v2/ledgers/${encodeURIComponent(ledger.ledgerId)}/funds/dates/${date}`,
       ),
       reportFetch<ReportResponse>(
+        msn,
         `/report/v2/ledgers/${encodeURIComponent(ledger.ledgerId)}/fees/dates/${date}`,
       ),
     ]);

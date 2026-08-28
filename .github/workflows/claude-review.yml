@@ -23,6 +23,20 @@ concurrency:
 
 jobs:
   review:
+    # Bevisst duplikat av sjekken i den delte workflowen (app-plattform#218).
+    # Den hører hjemme begge steder: `secrets: inherit` og
+    # `pull-requests: write` under gir kjøringen dette repoets Claude-token,
+    # og på `issue_comment` sjekkes PR-hodet ut — kode forfatteren selv
+    # kontrollerer. Dette er repoet som er offentlig, så det skal ikke miste
+    # beskyttelsen om den delte fila endres. Kadensen for øvrig (draft,
+    # dependabot, `@claude`) styres fortsatt der.
+    if: >-
+      (github.event_name == 'pull_request' &&
+       contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'),
+                github.event.pull_request.author_association)) ||
+      (github.event_name == 'issue_comment' &&
+       contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'),
+                github.event.comment.author_association))
     # MÅ stå her, ikke i den gjenbrukbare workflowen. En kalt workflow kan
     # bare få rettigheter kalleren allerede har — og repoets standard er
     # `read`. Uten dette avviser GitHub kallet med `startup_failure` før

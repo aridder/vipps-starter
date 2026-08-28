@@ -4,7 +4,6 @@ import { useState } from "react";
 import { api } from "@/trpc/react";
 import { useI18n } from "@/components/I18nProvider";
 import {
-  AGREEMENT_INTERVAL_SUFFIX,
   AGREEMENT_STATUS_COLORS,
   PAYMENT_STATUS_COLORS,
   formatDate,
@@ -250,7 +249,7 @@ function Payments() {
                   {paymentPurposeLabel(p.purpose, t)} · {kr(p.amountOre)}
                 </div>
                 <div className="truncate text-xs text-stone-400">
-                  {p.user?.name ?? (locale === "no" ? "Anonym" : "Anonymous")} · {formatDate(p.createdAt)}
+                  {p.user?.name ?? (locale === "no" ? "Anonym" : "Anonymous")} · {formatDate(p.createdAt, locale)}
                 </div>
               </div>
               <span
@@ -397,7 +396,7 @@ function PaymentVippsDetails({ reference }: { reference: string }) {
               <span className="text-stone-400">
                 {event.amount ? kr(event.amount.value) : ""}
                 {event.amount ? " · " : ""}
-                {formatDate(new Date(event.timestamp))}
+                {formatDate(new Date(event.timestamp), locale)}
               </span>
             </div>
           ))}
@@ -419,7 +418,7 @@ function localDate() {
 }
 
 function ReportReconciliation() {
-  const { locale } = useI18n();
+  const { locale, t } = useI18n();
   const [date, setDate] = useState(localDate);
   const report = api.report.overview.useQuery(
     { date },
@@ -467,7 +466,13 @@ function ReportReconciliation() {
           }
         />
       ) : data && !data.available ? (
-        <ReportNotice text={data.reason} />
+        <ReportNotice
+          text={
+            "reasonCode" in data && data.reasonCode
+              ? t(`reason.${data.reasonCode}`)
+              : ("reason" in data && data.reason) || ""
+          }
+        />
       ) : data?.available ? (
         <>
           <div className="grid gap-3 sm:grid-cols-3">
@@ -562,7 +567,7 @@ function ReportEntries({
                 <div className="font-bold">{entry.entryType}</div>
                 <div className="truncate text-xs text-stone-400">
                   {entry.reference ?? entry.pspReference ?? "–"} ·{" "}
-                  {formatDate(new Date(entry.time))}
+                  {formatDate(new Date(entry.time), locale)}
                 </div>
               </div>
               <div
@@ -613,7 +618,7 @@ function Subscriptions() {
             >
               <div className="min-w-0 flex-1">
                 <div className="truncate text-sm font-medium">
-                  {kr(a.amountOre)} {AGREEMENT_INTERVAL_SUFFIX[a.interval]}
+                  {kr(a.amountOre)} {t(a.interval === "MONTH" ? "per.mo" : "per.yr")}
                 </div>
                 <div className="truncate text-xs text-stone-400">
                   {a.user?.name ?? (locale === "no" ? "Ukjent" : "Unknown")} · {a.description}
@@ -681,7 +686,7 @@ function Charges({ agreementId }: { agreementId: string }) {
           <div className="flex-1">
             <div className="font-medium">{kr(c.amountOre)}</div>
             <div className="text-stone-400">
-              {locale === "no" ? "forfall" : "due"} {formatDate(c.due)} · {c.status}
+              {locale === "no" ? "forfall" : "due"} {formatDate(c.due, locale)} · {c.status}
             </div>
           </div>
           {(c.status === "RESERVED" || c.status === "DUE") && (
@@ -761,6 +766,7 @@ function AmountControl({
   busy: boolean;
   onSubmit: (amountKr: number) => void;
 }) {
+  const { t } = useI18n();
   const [amount, setAmount] = useState(String(maxKr));
   const btn =
     tone === "primary"
@@ -783,7 +789,9 @@ function AmountControl({
       >
         {label}
       </button>
-      <span className="text-[10px] text-stone-400">max {maxKr} kr</span>
+      <span className="text-[10px] text-stone-400">
+        {t("admin.max", { n: String(maxKr) })}
+      </span>
     </div>
   );
 }

@@ -7,6 +7,8 @@ import {
   hashAnalyticsId,
   trackProductEvent,
 } from "@/lib/server-telemetry";
+import { devLoginAllowed, resolveVippsIssuer } from "@/server/auth-policy";
+import { BASE as VIPPS_BASE, vippsConfigured } from "@/server/vipps";
 
 declare module "next-auth" {
   interface Session {
@@ -71,9 +73,12 @@ async function ensureMembership(userId: string, email?: string | null) {
   });
 }
 
-const devLoginEnabled =
-  process.env.ENABLE_DEV_LOGIN === "true" ||
-  process.env.NODE_ENV === "development";
+const devLoginEnabled = devLoginAllowed({
+  enableDevLogin: process.env.ENABLE_DEV_LOGIN,
+  nodeEnv: process.env.NODE_ENV,
+  vippsConfigured: vippsConfigured(),
+  vippsApiBase: VIPPS_BASE,
+});
 
 const providers: Provider[] = [];
 
@@ -85,9 +90,10 @@ if (process.env.VIPPS_CLIENT_ID && process.env.VIPPS_CLIENT_SECRET) {
     id: "vipps",
     name: "Vipps",
     type: "oidc",
-    issuer:
-      process.env.VIPPS_ISSUER ??
-      "https://api.vipps.no/access-management-1.0/access/",
+    issuer: resolveVippsIssuer({
+      vippsIssuer: process.env.VIPPS_ISSUER,
+      vippsApiBase: VIPPS_BASE,
+    }),
     clientId: process.env.VIPPS_CLIENT_ID,
     clientSecret: process.env.VIPPS_CLIENT_SECRET,
     // Vipps merchant Login clients use client_secret_basic by default.
@@ -106,7 +112,8 @@ if (process.env.VIPPS_CLIENT_ID && process.env.VIPPS_CLIENT_SECRET) {
 }
 
 // Dev/demo login: name + email, no password. For local development and CI.
-// Disable in production once Vipps Login is configured (ENABLE_DEV_LOGIN=false).
+// Refused outright once real Vipps credentials are present — see
+// `devLoginAllowed`. Keep ENABLE_DEV_LOGIN unset (or "false") anywhere else.
 if (devLoginEnabled) {
   providers.push(
     Credentials({

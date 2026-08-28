@@ -7,11 +7,23 @@ import { Logo } from "@/components/Logo";
 import { useI18n } from "@/components/I18nProvider";
 import { LocaleSwitcher } from "@/components/LocaleSwitcher";
 
-export function Nav({ userName }: { userName?: string | null }) {
+export function Nav({
+  userName,
+  features: initialFeatures,
+}: {
+  userName?: string | null;
+  // Feature flags come from environment variables, so the server already knows
+  // them at render time. Fetching them client-side made the nav render empty
+  // and then fill in — a layout shift at the very top of every page.
+  features?: { payments: boolean; paymentAdmin: boolean };
+}) {
   const pathname = usePathname();
   const { locale, t } = useI18n();
   const site = api.meta.site.useQuery();
-  const features = api.meta.features.useQuery();
+  const featuresQuery = api.meta.features.useQuery();
+  // Server value wins; the query is only a fallback for the rare case the nav
+  // is rendered without it.
+  const features = initialFeatures ?? featuresQuery.data;
   const me = api.meta.me.useQuery(undefined, { retry: false });
 
   const links: { href: string; label: string; show: boolean }[] = [
@@ -19,12 +31,12 @@ export function Nav({ userName }: { userName?: string | null }) {
     {
       href: "/billing",
       label: locale === "no" ? "Min side" : "My page",
-      show: features.data?.payments ?? false,
+      show: features?.payments ?? false,
     },
     {
       href: "/billing/admin",
       label: locale === "no" ? "Driftssentral" : "Operations",
-      show: (features.data?.paymentAdmin ?? false) && !!me.data?.isAdmin,
+      show: (features?.paymentAdmin ?? false) && !!me.data?.isAdmin,
     },
     { href: "/settings", label: t("nav.settings"), show: !!me.data?.isAdmin },
   ];

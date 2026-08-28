@@ -68,6 +68,31 @@ export function DonateWidget({
               <div className="h-10 animate-pulse rounded-2xl bg-stone-100" />
               <div className="h-12 animate-pulse rounded-2xl bg-stone-100" />
             </div>
+          ) : available.isError ? (
+            // Distinct from "not enabled": we do not know the state, and
+            // saying "not active yet" would present a guess as a fact.
+            <div
+              role="alert"
+              className="rounded-2xl border border-stone-200 bg-stone-50 p-4 text-sm leading-6 text-stone-700"
+            >
+              <div className="font-bold">
+                {locale === "no"
+                  ? "Fikk ikke kontakt med betalingstjenesten"
+                  : "Could not reach the payment service"}
+              </div>
+              <p className="mt-1">
+                {locale === "no"
+                  ? "Vi vet ikke om betaling er tilgjengelig akkurat nå. Prøv å laste siden på nytt."
+                  : "We do not know whether payments are available right now. Try reloading the page."}
+              </p>
+              <button
+                type="button"
+                onClick={() => void available.refetch()}
+                className="mt-3 rounded-xl border border-stone-300 px-3.5 py-1.5 text-xs font-bold transition hover:border-stone-500"
+              >
+                {locale === "no" ? "Prøv igjen" : "Try again"}
+              </button>
+            </div>
           ) : !on ? (
             <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm leading-6 text-amber-900">
               <div className="font-bold">

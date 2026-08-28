@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useId, useState } from "react";
 import {
   AgreementInterval,
   AgreementStatus,
@@ -563,9 +563,12 @@ function AmountPicker({
   setAmount: (value: string) => void;
   label: string;
 }) {
+  // `label` is display text, so interpolating it produced ids with spaces and
+  // parentheses. useId is stable across server and client render.
+  const fieldId = useId();
   return (
     <div>
-      <label htmlFor={`amount-${label}`} className="mb-2 block text-xs font-black uppercase tracking-wider text-stone-400">
+      <label htmlFor={fieldId} className="mb-2 block text-xs font-black uppercase tracking-wider text-stone-400">
         {label}
       </label>
       <div className="grid grid-cols-3 gap-2">
@@ -587,7 +590,7 @@ function AmountPicker({
       </div>
       <div className="relative mt-3">
         <input
-          id={`amount-${label}`}
+          id={fieldId}
           type="number"
           min={1}
           value={amount}

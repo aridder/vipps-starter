@@ -54,7 +54,8 @@ export default function SettingsPage() {
     onSuccess: invalidateMembers,
   });
 
-  if (me.isSuccess && !me.data.isAdmin) {
+  // `me` is null when signed out, which is also "not an admin".
+  if (me.isSuccess && !me.data?.isAdmin) {
     return <p className="text-sm text-stone-500">{t("settings.requiresAdmin")}</p>;
   }
 

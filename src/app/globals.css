@@ -8,3 +8,33 @@
 body {
   -webkit-tap-highlight-color: transparent;
 }
+
+/* Keyboard users need to see where they are. Several components style their
+   own hover state and would otherwise leave focus invisible, which is the
+   single most common accessibility regression an app inherits from a starter
+   like this one. `:focus-visible` keeps mouse clicks from drawing a ring. */
+:focus-visible {
+  outline: 2px solid #ff5b24;
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* The page leans on hover lifts and transitions. Respect the OS setting for
+   people who get motion sick or are distracted by movement — for them, state
+   changes should still be visible, just instant. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  /* Neutralise the decorative translate on hover/focus rather than letting it
+     snap: the lift carries no information the colour change does not. */
+  .hover\:-translate-y-0\.5:hover {
+    transform: none !important;
+  }
+}

@@ -7,7 +7,7 @@ import {
   hashAnalyticsId,
   trackProductEvent,
 } from "@/lib/server-telemetry";
-import { devLoginAllowed } from "@/server/auth-policy";
+import { devLoginAllowed, resolveVippsIssuer } from "@/server/auth-policy";
 import { BASE as VIPPS_BASE, vippsConfigured } from "@/server/vipps";
 
 declare module "next-auth" {
@@ -90,9 +90,10 @@ if (process.env.VIPPS_CLIENT_ID && process.env.VIPPS_CLIENT_SECRET) {
     id: "vipps",
     name: "Vipps",
     type: "oidc",
-    issuer:
-      process.env.VIPPS_ISSUER ??
-      "https://api.vipps.no/access-management-1.0/access/",
+    issuer: resolveVippsIssuer({
+      vippsIssuer: process.env.VIPPS_ISSUER,
+      vippsApiBase: VIPPS_BASE,
+    }),
     clientId: process.env.VIPPS_CLIENT_ID,
     clientSecret: process.env.VIPPS_CLIENT_SECRET,
     // Vipps merchant Login clients use client_secret_basic by default.

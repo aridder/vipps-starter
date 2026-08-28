@@ -1,6 +1,10 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { devLoginAllowed, isVippsProduction } from "./auth-policy.ts";
+import {
+  devLoginAllowed,
+  isVippsProduction,
+  resolveVippsIssuer,
+} from "./auth-policy.ts";
 
 // Dev login signs anyone in on an unverified email. If that address is listed
 // in ADMIN_EMAILS they become ADMIN, and an admin can repoint the
@@ -53,6 +57,31 @@ test("dev login is off unless it is explicitly asked for", () => {
   );
   // Local development remains convenient.
   assert.equal(devLoginAllowed({ ...base, nodeEnv: "development" }), true);
+});
+
+test("the login issuer follows the payment environment", () => {
+  // The old default sent a test instance to the PRODUCTION issuer — the safe
+  // half defaulted to test, the sensitive half did not.
+  assert.match(
+    resolveVippsIssuer({ vippsApiBase: "https://apitest.vipps.no" }),
+    /apitest\.vipps\.no/,
+  );
+  assert.match(
+    resolveVippsIssuer({ vippsApiBase: "https://api.vipps.no" }),
+    /^https:\/\/api\.vipps\.no\//,
+  );
+  // A live deployment must set VIPPS_API_BASE to reach real money, so it keeps
+  // the production issuer without changing any configuration.
+});
+
+test("an explicit issuer always wins", () => {
+  assert.equal(
+    resolveVippsIssuer({
+      vippsIssuer: "https://example.test/issuer/",
+      vippsApiBase: "https://api.vipps.no",
+    }),
+    "https://example.test/issuer/",
+  );
 });
 
 test("only the Vipps production host counts as live", () => {

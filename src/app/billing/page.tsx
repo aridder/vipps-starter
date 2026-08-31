@@ -34,6 +34,7 @@ export default function BillingPage() {
   const features = api.meta.features.useQuery();
   const available = api.payment.available.useQuery();
   const me = api.meta.me.useQuery(undefined, { retry: false });
+  const site = api.meta.site.useQuery();
   const [mode, setMode] = useState<"once" | "recurring">("once");
 
   const on = available.data?.available ?? false;
@@ -52,8 +53,8 @@ export default function BillingPage() {
         </h1>
         <p className="mt-2 max-w-2xl text-sm leading-6 text-stone-300">
           {locale === "no"
-            ? "Betal med Vipps, se hva som har skjedd og administrer faste avtaler. Du sendes alltid til Vipps for å godkjenne."
-            : "Pay with Vipps, see what happened and manage recurring agreements. You are always sent to Vipps to approve."}
+            ? "Dette er demoen av kundeområdet i den åpne kildekoden: betal med Vipps, se hva som har skjedd og administrer faste avtaler. Du sendes alltid til Vipps for å godkjenne."
+            : "This is the demo of the customer area in the open-source code: pay with Vipps, see what happened and manage recurring agreements. You are always sent to Vipps to approve."}
         </p>
         <div className="mt-6 grid gap-2 text-xs sm:grid-cols-3">
           {[
@@ -67,6 +68,19 @@ export default function BillingPage() {
           ))}
         </div>
       </header>
+
+      <div className="rounded-2xl border border-[#ff5b24]/25 bg-[#fff4ef] p-5 text-sm leading-6 text-stone-800">
+        <div className="font-black text-[#c93808]">
+          {locale === "no"
+            ? "Ingenting selges på denne siden"
+            : "Nothing is sold on this page"}
+        </div>
+        <p className="mt-1">
+          {locale === "no"
+            ? `«Betaling» og «Abonnement» demonstrerer flytene i den åpne kildekoden (MIT). Alle beløp som trekkes her er frivillige donasjoner til ${site.data?.author.name ?? "utvikleren"}, uten motytelse — du kjøper ingen vare, tjeneste eller tilgang. Koden og all dokumentasjon er gratis på GitHub.`
+            : `“Payment” and “Subscription” demonstrate the flows in the open-source code (MIT). Every amount charged here is a voluntary donation to ${site.data?.author.name ?? "the developer"}, with nothing in return — you are not buying goods, services or access. The code and all documentation are free on GitHub.`}
+        </p>
+      </div>
 
       {!loggedIn && !me.isLoading && (
         <div className="flex flex-col gap-4 rounded-2xl border border-indigo-200 bg-indigo-50 p-5 sm:flex-row sm:items-center sm:justify-between">
@@ -214,7 +228,7 @@ function OnceForm() {
         values={["ONE_TIME", "DONATION"]}
         selected={purpose}
         labels={[
-          [t("billing.payment"), locale === "no" ? "Kjøp eller engangsbeløp" : "Purchase or one-off amount"],
+          [t("billing.payment"), locale === "no" ? "Demonstrerer kjøpsflyten — beløpet er en donasjon" : "Demonstrates the purchase flow — the amount is a donation"],
           [t("billing.donation"), locale === "no" ? "Støtt uten motytelse" : "Support without a purchase"],
         ]}
         onChange={(value) => {
@@ -456,7 +470,7 @@ function RecurringForm() {
         values={["SUBSCRIPTION", "DONATION"]}
         selected={purpose}
         labels={[
-          [t("billing.subscription"), locale === "no" ? "Fast pris per periode" : "Fixed price per period"],
+          [t("billing.subscription"), locale === "no" ? "Demonstrerer abonnementsflyten — trekkene er donasjoner" : "Demonstrates the subscription flow — the charges are donations"],
           [t("billing.donation"), locale === "no" ? "Fast støtte over tid" : "Recurring support over time"],
         ]}
         onChange={(value) => {

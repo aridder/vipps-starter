@@ -28,7 +28,7 @@ export function resolveSite(): SiteConfig {
     name: env("APP_NAME", "Vipps Starter"),
     tagline: env(
       "SITE_TAGLINE",
-      "Starter for folk og AI-agenter som vil ta i bruk Vipps — Login, betalinger og faste trekk (abonnement). Test live med ekte Vipps, og klon fra GitHub.",
+      "Gratis, åpen kildekode (MIT) for Vipps-integrasjon — Login, betaling og faste trekk. Ingenting selges her: demoen tar imot frivillige donasjoner for å vise flyten live. Klon fra GitHub.",
     ),
     githubUrl: env("GITHUB_URL", "https://github.com/aridder/vipps-starter"),
     author: {

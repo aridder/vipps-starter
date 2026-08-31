@@ -178,8 +178,8 @@ export default async function LandingPage() {
           </h1>
           <p className="mt-6 max-w-2xl text-base leading-7 text-stone-300 sm:text-lg">
             {no
-              ? "En komplett, kjørende Vipps-integrasjon du kan klone eller plukke moduler fra: engangsbetaling, abonnement, QR, Vipps Login, signerte webhooks, refusjon og partner-modellen med eget salgssted per kunde."
-              : "A complete, running Vipps integration to clone or lift modules from: one-off payments, subscriptions, QR, Vipps Login, signed webhooks, refunds, and the partner model with a merchant serial number per customer."}
+              ? "En komplett, kjørende Vipps-integrasjon du kan klone eller plukke moduler fra: engangsbetaling, abonnement, QR, Vipps Login, signerte webhooks, refusjon og partner-modellen med eget salgssted per kunde. Alt er gratis og MIT-lisensiert — det eneste som kan betales på denne siden, er en frivillig donasjon til vedlikeholderen."
+              : "A complete, running Vipps integration to clone or lift modules from: one-off payments, subscriptions, QR, Vipps Login, signed webhooks, refunds, and the partner model with a merchant serial number per customer. Everything is free and MIT-licensed — the only thing that can be paid on this site is a voluntary donation to the maintainer."}
           </p>
           <div className="mt-8 flex flex-col gap-3 sm:flex-row">
             <a

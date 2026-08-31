@@ -15,6 +15,38 @@ const DOC = "https://developer.vippsmobilepay.com/docs";
 const ITEMS: Item[] = [
   {
     q: {
+      no: "Selger denne siden noe?",
+      en: "Does this site sell anything?",
+    },
+    a: {
+      no: (
+        <>
+          Nei. Koden og all dokumentasjon er gratis og åpen på GitHub
+          (MIT-lisens) — det finnes ingen betalt tilgang, ikke noe abonnement
+          på innhold og ingen tjenester til salgs her. Betalingene på siden er
+          frivillige donasjoner til utvikleren, uten motytelse, og finnes
+          utelukkende for å demonstrere integrasjonen med ekte
+          produksjonsbetalinger. En bedrift som vil ta imot Vipps-betalinger
+          med denne koden, inngår sin egen avtale direkte med Vipps og får
+          sitt eget salgssted (MSN).
+        </>
+      ),
+      en: (
+        <>
+          No. The code and all documentation are free and open on GitHub (MIT
+          license) — there is no paid access, no content subscription and no
+          services for sale here. Payments on this site are voluntary
+          donations to the developer, with nothing in return, and exist solely
+          to demonstrate the integration with real production payments. A
+          business that wants to accept Vipps payments using this code signs
+          its own agreement directly with Vipps and gets its own sales unit
+          (MSN).
+        </>
+      ),
+    },
+  },
+  {
+    q: {
       no: "Trenger jeg en Vipps-avtale bare for å teste?",
       en: "Do I need a Vipps agreement just to test?",
     },

@@ -31,7 +31,7 @@ case "$action" in
   e2e) script="test:e2e" ;;
   ui) script="review:ui" ;;
   doctor)
-    exec scripts/with-node-22.sh bash -c '
+    exec scripts/with-node.sh bash -c '
       printf "node=%s\n" "$(node --version)"
       printf "npm=%s\n" "$(npm --version)"
       if docker compose version >/dev/null 2>&1; then
@@ -51,9 +51,9 @@ esac
 
 [ "${1:-}" = "--" ] && shift
 if [ "${#direct_command[@]}" -gt 0 ]; then
-  exec scripts/with-node-22.sh "${direct_command[@]}" "$@"
+  exec scripts/with-node.sh "${direct_command[@]}" "$@"
 fi
 if [ "$#" -gt 0 ]; then
-  exec scripts/with-node-22.sh npm run "$script" -- "$@"
+  exec scripts/with-node.sh npm run "$script" -- "$@"
 fi
-exec scripts/with-node-22.sh npm run "$script"
+exec scripts/with-node.sh npm run "$script"

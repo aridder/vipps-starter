@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 # Select the pinned Node major without changing the user's global shell.
+# The major comes from .node-version alone, so a runtime bump is one edit.
 set -euo pipefail
 
 repo_root="$(cd "$(dirname "$0")/.." && pwd)"
@@ -25,15 +26,18 @@ if command -v node >/dev/null 2>&1 &&
   exec "$@"
 fi
 
-if [ -n "${NODE_22_HOME:-}" ]; then
-  use_node_home "$NODE_22_HOME" "$@"
+# NODE_<major>_HOME stays supported so a machine can hold several majors.
+override_var="NODE_${required_major}_HOME"
+override_home="${!override_var:-${NODE_HOME:-}}"
+if [ -n "$override_home" ]; then
+  use_node_home "$override_home" "$@"
 fi
 
 configured_nvm_home="${NVM_BIN:-}"
 configured_nvm_home="${configured_nvm_home%/bin}"
 for node_home in \
-  /opt/homebrew/opt/node@22 \
-  /usr/local/opt/node@22 \
+  "/opt/homebrew/opt/node@$required_major" \
+  "/usr/local/opt/node@$required_major" \
   "$configured_nvm_home"; do
   [ -n "$node_home" ] && use_node_home "$node_home" "$@"
 done
@@ -58,9 +62,9 @@ for nvm_script in \
   fi
 done
 
-cat >&2 <<EOF
+cat >&2 <<MSG
 Node $required_major is required, but no installed matching runtime was found.
 Install it once (for example: brew install node@$required_major) or set
-NODE_22_HOME. Then use ./scripts/dev so future runs select it automatically.
-EOF
+$override_var. Then use ./scripts/dev so future runs select it automatically.
+MSG
 exit 1

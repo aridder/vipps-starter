@@ -6,7 +6,7 @@ to this file.
 
 ## Development contract
 
-Use Node 22. A clean checkout becomes runnable with:
+Use Node 26. A clean checkout becomes runnable with:
 
 ```bash
 ./scripts/dev setup
